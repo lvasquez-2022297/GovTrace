@@ -1,6 +1,8 @@
 import { pool } from '../db';
 import { Adjudicacion } from '../models/Adjudicaciones';
 
+export type CreacionAdjudicacion = Omit<Adjudicacion, 'id' | 'fecha_adjudicacion'>;
+
 export class AdjudicacionesRepository {
   async obtenerTodas(): Promise<Adjudicacion[]> {
     const res = await pool.query('SELECT * FROM adjudicaciones ORDER BY id DESC');
@@ -12,7 +14,12 @@ export class AdjudicacionesRepository {
     return res.rows[0] || null;
   }
 
-  async crear(adjudicacion: Adjudicacion): Promise<Adjudicacion> {
+  async obtenerPorLicitacionId(licitacionId: number): Promise<Adjudicacion | null> {
+    const res = await pool.query('SELECT * FROM adjudicaciones WHERE licitacion_id = $1', [licitacionId]);
+    return res.rows[0] || null;
+  }
+
+  async crear(adjudicacion: CreacionAdjudicacion): Promise<Adjudicacion> {
     const res = await pool.query(
       `INSERT INTO adjudicaciones (licitacion_id, proveedor_id, monto_adjudicado, observaciones)
        VALUES ($1, $2, $3, $4)

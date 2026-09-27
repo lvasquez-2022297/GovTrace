@@ -3,12 +3,12 @@ import { Usuario } from '../models/Usuarios';
 
 export class UsuariosRepository {
   async obtenerTodos(): Promise<Usuario[]> {
-    const res = await pool.query('SELECT id, nombre, email, rol, creado_en FROM usuarios ORDER BY id ASC');
+    const res = await pool.query('SELECT * FROM usuarios ORDER BY id ASC');
     return res.rows;
   }
 
   async obtenerPorId(id: number): Promise<Usuario | null> {
-    const res = await pool.query('SELECT id, nombre, email, rol, creado_en FROM usuarios WHERE id = $1', [id]);
+    const res = await pool.query('SELECT * FROM usuarios WHERE id = $1', [id]);
     return res.rows[0] || null;
   }
 
@@ -17,12 +17,12 @@ export class UsuariosRepository {
     return res.rows[0] || null;
   }
 
-  async crear(usuario: Usuario): Promise<Usuario> {
+  async crear(usuario: Omit<Usuario, 'id' | 'creado_en'>): Promise<Usuario> {
     const res = await pool.query(
       `INSERT INTO usuarios (nombre, email, password, rol)
        VALUES ($1, $2, $3, $4)
        RETURNING id, nombre, email, rol, creado_en`,
-      [usuario.nombre, usuario.email, usuario.password, usuario.rol || 'CIUDADANO']
+      [usuario.nombre, usuario.email, usuario.password, usuario.rol]
     );
     return res.rows[0];
   }

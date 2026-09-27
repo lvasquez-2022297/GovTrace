@@ -1,6 +1,8 @@
 import { pool } from '../db';
 import { Alerta } from '../models/Alertas';
 
+export type CreacionAlerta = Omit<Alerta, 'id' | 'creado_en'>;
+
 export class AlertasRepository {
   async obtenerTodas(): Promise<Alerta[]> {
     const res = await pool.query('SELECT * FROM alertas ORDER BY id DESC');
@@ -12,12 +14,12 @@ export class AlertasRepository {
     return res.rows[0] || null;
   }
 
-  async crear(alerta: Alerta): Promise<Alerta> {
+  async crear(alerta: CreacionAlerta): Promise<Alerta> {
     const res = await pool.query(
       `INSERT INTO alertas (licitacion_id, tipo_alerta, descripcion, nivel_riesgo)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [alerta.licitacion_id, alerta.tipo_alerta, alerta.descripcion, alerta.nivel_riesgo || 'MEDIO']
+      [alerta.licitacion_id, alerta.tipo_alerta, alerta.descripcion, alerta.nivel_riesgo ?? 'MEDIO']
     );
     return res.rows[0];
   }

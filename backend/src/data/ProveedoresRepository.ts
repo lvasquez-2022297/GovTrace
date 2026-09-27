@@ -1,6 +1,8 @@
 import { pool } from '../db';
 import { Proveedor } from '../models/Proveedores';
 
+export type CreacionProveedor = Omit<Proveedor, 'id' | 'creado_en'>;
+
 export class ProveedoresRepository {
   async obtenerTodos(): Promise<Proveedor[]> {
     const res = await pool.query('SELECT * FROM proveedores ORDER BY id ASC');
@@ -12,12 +14,17 @@ export class ProveedoresRepository {
     return res.rows[0] || null;
   }
 
-  async crear(proveedor: Proveedor): Promise<Proveedor> {
+  async obtenerPorNit(nit: string): Promise<Proveedor | null> {
+    const res = await pool.query('SELECT * FROM proveedores WHERE nit = $1', [nit]);
+    return res.rows[0] || null;
+  }
+
+  async crear(proveedor: CreacionProveedor): Promise<Proveedor> {
     const res = await pool.query(
       `INSERT INTO proveedores (nit, razon_social, email, calificacion)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [proveedor.nit, proveedor.razon_social, proveedor.email, proveedor.calificacion || 5.0]
+      [proveedor.nit, proveedor.razon_social, proveedor.email, proveedor.calificacion ?? 5.0]
     );
     return res.rows[0];
   }

@@ -1,4 +1,4 @@
-import { LicitacionesRepository } from '../data/LicitacionesRepository';
+import { LicitacionesRepository, CreacionLicitacion } from '../data/LicitacionesRepository';
 import { Licitacion } from '../models/Licitaciones';
 
 export class LicitacionesService {
@@ -14,14 +14,37 @@ export class LicitacionesService {
     return licitacion;
   }
 
-  async crearLicitacion(licitacion: Licitacion): Promise<Licitacion> {
-    if (licitacion.presupuesto_asignado <= 0) {
-      throw new Error('El presupuesto asignado debe ser mayor a 0.');
+  async crearLicitacion(licitacion: CreacionLicitacion): Promise<Licitacion> {
+    if (!licitacion.codigo_licitacion || licitacion.codigo_licitacion.trim() === '') {
+      throw new Error('El código de licitación es obligatorio.');
     }
+
+    if (!licitacion.presupuesto_asignado || licitacion.presupuesto_asignado <= 0) {
+      throw new Error('El presupuesto asignado debe ser una cantidad numérica mayor a 0.');
+    }
+
+    const fInicio = new Date(licitacion.fecha_inicio);
+    const fCierre = new Date(licitacion.fecha_cierre);
+
+    if (isNaN(fInicio.getTime()) || isNaN(fCierre.getTime())) {
+      throw new Error('Las fechas de inicio y cierre deben tener un formato de fecha válido.');
+    }
+
+    if (fCierre <= fInicio) {
+      throw new Error('La fecha de cierre de la licitación debe ser posterior a la fecha de inicio.');
+    }
+
+    const existe = await this.repo.obtenerPorCodigo(licitacion.codigo_licitacion);
+    if (existe) throw new Error(`La licitación con código ${licitacion.codigo_licitacion} ya existe.`);
+
     return await this.repo.crear(licitacion);
   }
 
   async actualizarLicitacion(id: number, licitacion: Partial<Licitacion>): Promise<Licitacion> {
+    if (licitacion.presupuesto_asignado !== undefined && licitacion.presupuesto_asignado <= 0) {
+      throw new Error('El presupuesto asignado debe ser mayor a 0.');
+    }
+
     const actualizada = await this.repo.actualizar(id, licitacion);
     if (!actualizada) throw new Error(`No se pudo actualizar la licitación con ID ${id}.`);
     return actualizada;

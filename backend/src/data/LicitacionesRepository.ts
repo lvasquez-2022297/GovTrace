@@ -1,6 +1,8 @@
 import { pool } from '../db';
 import { Licitacion } from '../models/Licitaciones';
 
+export type CreacionLicitacion = Omit<Licitacion, 'id' | 'creado_en'>;
+
 export class LicitacionesRepository {
   async obtenerTodas(): Promise<Licitacion[]> {
     const res = await pool.query('SELECT * FROM licitaciones ORDER BY id DESC');
@@ -12,7 +14,12 @@ export class LicitacionesRepository {
     return res.rows[0] || null;
   }
 
-  async crear(licitacion: Licitacion): Promise<Licitacion> {
+  async obtenerPorCodigo(codigo: string): Promise<Licitacion | null> {
+    const res = await pool.query('SELECT * FROM licitaciones WHERE codigo_licitacion = $1', [codigo]);
+    return res.rows[0] || null;
+  }
+
+  async crear(licitacion: CreacionLicitacion): Promise<Licitacion> {
     const res = await pool.query(
       `INSERT INTO licitaciones (codigo_licitacion, titulo, descripcion, presupuesto_asignado, estado, fecha_inicio, fecha_cierre, creado_por)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -22,7 +29,7 @@ export class LicitacionesRepository {
         licitacion.titulo,
         licitacion.descripcion,
         licitacion.presupuesto_asignado,
-        licitacion.estado || 'PUBLICADA',
+        licitacion.estado ?? 'Publicada',
         licitacion.fecha_inicio,
         licitacion.fecha_cierre,
         licitacion.creado_por,
