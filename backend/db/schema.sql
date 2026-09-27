@@ -8,7 +8,7 @@ create table usuarios (
     id serial primary key,
     nombre varchar(100) not null,
     email varchar(120) unique not null,
-    password varchar(255) not null, -- almacenará el hash cifrado con bcrypt/argon2
+    password varchar(255) not null, 
     rol varchar(30) default 'CIUDADANO' check (rol in ('ADMIN', 'AUDITOR', 'CIUDADANO')),
     creado_en timestamp default current_timestamp
 );
