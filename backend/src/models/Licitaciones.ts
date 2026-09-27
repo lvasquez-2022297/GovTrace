@@ -1,4 +1,4 @@
-export type EstadoLicitacion = 'Publicada' | 'ADJUDICADA' | 'CANCELADA' | 'CON_ALERTA' ;
+export type EstadoLicitacion = 'PUBLICADA' | 'ADJUDICADA' | 'CANCELADA' | 'CON_ALERTA';
 
 export interface Licitacion {
     id: number;

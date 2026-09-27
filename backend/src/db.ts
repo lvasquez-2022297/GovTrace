@@ -7,14 +7,17 @@ export const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
   port: Number(process.env.DB_PORT) || 5432,
   user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || '',
+  password: String(process.env.DB_PASSWORD || 'admin'),
   database: process.env.DB_NAME || 'govtrace',
 });
 
-pool.connect((err, client, release) => {
-  if (err) {
-    return console.error('Error al conectar a PostgreSQL:', err.stack);
+export const conectarDB = async (): Promise<void> => {
+  try {
+    const client = await pool.connect();
+    console.log('Conexión exitosa a la base de datos GovTrace');
+    client.release();
+  } catch (err: any) {
+    console.error('Error al conectar a PostgreSQL:', err.message);
+    process.exit(1);
   }
-  console.log('Conexión exitosa a la base de datos GovTrace');
-  release();
-});
+};
