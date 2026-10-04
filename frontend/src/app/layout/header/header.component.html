@@ -1,1 +1,16 @@
-<p>header works!</p>
+<header class="main-header" *ngIf="authService.isAuthenticated()">
+  <div class="logo">
+    <a routerLink="/dashboard"><strong>GovTrace</strong></a>
+  </div>
+  <nav class="nav-menu">
+    <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+    <a routerLink="/licitaciones" routerLinkActive="active">Licitaciones</a>
+    <a routerLink="/adjudicaciones" routerLinkActive="active">Adjudicaciones</a>
+    <a routerLink="/proveedores" routerLinkActive="active">Proveedores</a>
+    <a routerLink="/alertas" routerLinkActive="active">Alertas</a>
+    <a routerLink="/usuarios" routerLinkActive="active">Usuarios</a>
+  </nav>
+  <div class="user-actions">
+    <button (click)="onLogout()" class="btn-logout">Cerrar Sesión</button>
+  </div>
+</header>
