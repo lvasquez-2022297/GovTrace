@@ -1,0 +1,61 @@
+<div class="home-container">
+  <!-- Navbar pública independiente -->
+  <nav class="public-nav">
+    <div class="brand">
+      <strong>GovTrace</strong>
+      <span class="badge">AUDITORÍA CIUDADANA</span>
+    </div>
+    <div class="nav-actions">
+      <ng-container *ngIf="!authService.isAuthenticated(); else loggedInView">
+        <a routerLink="/login" class="btn-secondary">Iniciar Sesión</a>
+        <a routerLink="/register" class="btn-primary">Registrarse</a>
+      </ng-container>
+      <ng-template #loggedInView>
+        <a routerLink="/dashboard" class="btn-primary">Ir al Dashboard ➔</a>
+      </ng-template>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <span class="hero-pill">Plataforma de Inteligencia Fiscal</span>
+      <h1 class="hero-title">Transparencia y Vigilancia en Contrataciones Públicas</h1>
+      <p class="hero-description">
+        GovTrace es una plataforma concebida para auditar las compras del Estado. Analizamos licitaciones, 
+        evaluamos proveedores y detectamos anomalías o sobreprecios mediante algoritmos de fiscalización en tiempo real.
+      </p>
+      <div class="hero-buttons">
+        <a routerLink="/register" class="btn-cta-main">Únete como Auditor Ciudadano</a>
+        <a routerLink="/login" class="btn-cta-secondary">Ingresar al Sistema</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="features-section">
+    <div class="section-title">
+      <h2>¿Cómo funciona GovTrace?</h2>
+      <p>Nuestra infraestructura centraliza datos de compras estatales para que la ciudadanía y auditores puedan monitorear el gasto público.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="icon-container">🔍</div>
+        <h3>Monitoreo de Licitaciones</h3>
+        <p>Estructuramos las compras directas y contrataciones públicas en tiempo real para facilitar su consulta y análisis.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-container">🚨</div>
+        <h3>Detección de Sobreprecios</h3>
+        <p>Generamos alertas automáticas cuando el valor ofertado excede significativamente los costos promedio del mercado.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-container">📊</div>
+        <h3>Índice de Transparencia</h3>
+        <p>Clasificamos los ministerios e instituciones estatales de acuerdo a su nivel de rendición de cuentas e integridad.</p>
+      </div>
+    </div>
+  </section>
+</div>

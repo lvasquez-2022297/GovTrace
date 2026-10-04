@@ -1,0 +1,125 @@
+.page-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+.page-header h1 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.page-header p {
+  color: #64748b;
+  margin-top: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.search-bar-card {
+  background-color: #ffffff;
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.search-input-wrapper {
+  flex: 1;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.9rem;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.select-filter {
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff;
+}
+
+.table-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  background-color: #f8fafc;
+  padding: 0.85rem 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.data-table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9rem;
+}
+
+.font-mono { font-family: monospace; color: #1e293b; }
+.title-cell { font-weight: 600; color: #0f172a; max-width: 250px; }
+.text-right { text-align: right; }
+.font-bold { font-weight: 700; }
+.text-muted { color: #64748b; font-size: 0.85rem; }
+
+.vendor-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.vendor-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.vendor-nit {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.status-badge {
+  padding: 0.25rem 0.65rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-process { background-color: #e0f2fe; color: #0284c7; }
+.badge-success { background-color: #d1fae5; color: #059669; }
+.badge-danger { background-color: #fee2e2; color: #dc2626; }
+
+.no-data {
+  text-align: center;
+  color: #64748b;
+  padding: 2.5rem 1rem;
+}

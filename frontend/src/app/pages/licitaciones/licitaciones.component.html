@@ -1,1 +1,67 @@
-<p>licitaciones works!</p>
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Monitoreo de Licitaciones</h1>
+      <p>Consulta y audita los procesos de contratación del Estado en tiempo real.</p>
+    </div>
+  </div>
+
+  <!-- Filtros y Buscador -->
+  <div class="search-bar-card">
+    <div class="search-input-wrapper">
+      <input 
+        type="text" 
+        placeholder="Buscar por NOG, título o institución..." 
+        [(ngModel)]="searchTerm" 
+        class="search-input"
+      />
+    </div>
+
+    <div class="filter-group">
+      <label>Estado:</label>
+      <select [(ngModel)]="estadoFiltro" class="select-filter">
+        <option value="TODOS">Todos los estados</option>
+        <option value="EN_PROCESO">En Proceso</option>
+        <option value="ADJUDICADA">Adjudicada</option>
+        <option value="ALERTA">Con Alerta 🔴</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Tabla de Licitaciones -->
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>NOG</th>
+          <th>TÍTULO / DESCRIPCIÓN</th>
+          <th>INSTITUCIÓN</th>
+          <th class="text-right">MONTO EST.</th>
+          <th>ESTADO</th>
+          <th>FECHA</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of licitacionesFiltradas">
+          <td class="font-mono"><strong>{{ item.noNog }}</strong></td>
+          <td class="title-cell">{{ item.titulo }}</td>
+          <td>{{ item.entidad }}</td>
+          <td class="text-right font-bold">Q{{ item.montoEstimado | number:'1.2-2' }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="{
+              'badge-process': item.estado === 'EN_PROCESO',
+              'badge-success': item.estado === 'ADJUDICADA',
+              'badge-danger': item.estado === 'ALERTA'
+            }">
+              {{ item.estado }}
+            </span>
+          </td>
+          <td class="text-muted">{{ item.fechaPublicacion }}</td>
+        </tr>
+        <tr *ngIf="licitacionesFiltradas.length === 0">
+          <td colspan="6" class="no-data">No se encontraron licitaciones con los criterios de búsqueda.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

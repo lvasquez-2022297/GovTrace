@@ -1,1 +1,115 @@
-<p>dashboard works!</p>
+<div class="dashboard-page">
+  <section class="hero-section">
+    <div class="hero-content">
+      <span class="badge-active">Vigilancia Fiscal Activa</span>
+      <h1 class="hero-title">Portal de Transparencia y Auditoría Ciudadana</h1>
+      <p class="hero-description">
+        Rastreamos las compras del Estado guatemalteco para identificar desvíos, sobreprecios y anomalías. 
+        Empoderando a la ciudadanía a través del acceso a datos abiertos y estructurados.
+      </p>
+
+      <div class="filter-section">
+        <span class="filter-label">FILTRAR LICITACIONES POR:</span>
+        <div class="filter-pills">
+          <button 
+            class="pill-btn" 
+            [class.active]="filtroSeleccionado === 'Todos'" 
+            (click)="setFiltro('Todos')">
+            Todos
+          </button>
+          <button 
+            class="pill-btn btn-alert" 
+            [class.active]="filtroSeleccionado === 'Alerta'" 
+            (click)="setFiltro('Alerta')">
+            🔴 Con Alerta de Sobreprecio
+          </button>
+          <button 
+            class="pill-btn" 
+            [class.active]="filtroSeleccionado === 'Salud'" 
+            (click)="setFiltro('Salud')">
+            Ministerio de Salud
+          </button>
+          <button 
+            class="pill-btn" 
+            [class.active]="filtroSeleccionado === 'Educacion'" 
+            (click)="setFiltro('Educacion')">
+            Ministerio de Educación
+          </button>
+          <button 
+            class="pill-btn" 
+            [class.active]="filtroSeleccionado === 'Obras'" 
+            (click)="setFiltro('Obras')">
+            Obras Públicas
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="metrics-container">
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <span class="metric-label">Total Presupuestado</span>
+        <h2 class="metric-value">Q{{ metrics.totalPresupuesto }}M</h2>
+        <span class="metric-subtext subtext-green">⬆ 98.4% Ejecutado Correctamente</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">Alertas Activas</span>
+        <h2 class="metric-value">{{ metrics.alertasActivas }}</h2>
+        <span class="metric-subtext subtext-red">⏱ +12% de sobreprecio promedio</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">Ministerios Auditados</span>
+        <h2 class="metric-value">{{ metrics.ministeriosAuditados }}</h2>
+        <span class="metric-subtext subtext-green">⬆ Cobertura completa del gabinete</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">Proveedores Registrados</span>
+        <h2 class="metric-value">{{ metrics.proveedoresRegistrados | number }}</h2>
+        <span class="metric-subtext subtext-green">⬆ 95% con documentación al día</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-banner">
+    <h2>¿Has Detectado una Anomalía o un Sobreprecio?</h2>
+    <p>Nuestra herramienta permite subir reportes de manera anónima y segura. Cada denuncia es procesada por un equipo de analistas de datos y validada frente a la base nacional.</p>
+    <div class="cta-buttons">
+      <a routerLink="/alertas" class="btn-cta-green">Iniciar Denuncia Anónima ➔</a>
+      <a routerLink="/licitaciones" class="btn-cta-outline">Guía del Auditor Ciudadano ❓</a>
+    </div>
+  </section>
+
+  <section class="transparency-index-section">
+    <div class="section-header">
+      <h2>Índice de Transparencia por Ministerio</h2>
+      <p>Evaluamos y ordenamos cada institución estatal según su nivel de apertura de datos y porcentaje de alertas fiscales resueltas.</p>
+    </div>
+
+    <div class="table-card">
+      <table class="index-table">
+        <thead>
+          <tr>
+            <th>RANKING</th>
+            <th>INSTITUCIÓN</th>
+            <th class="text-right">ÍNDICE TRANSPARENCIA</th>
+            <th class="text-right">TASA DE ALERTA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let m of ministeriosIndex">
+            <td class="ranking-cell">#{{ m.ranking }}</td>
+            <td class="institution-cell"><strong>{{ m.institucion }}</strong></td>
+            <td class="text-right font-bold" [ngClass]="{'text-green': m.indiceTransparencia >= 75, 'text-orange': m.indiceTransparencia < 75 && m.indiceTransparencia >= 50, 'text-red': m.indiceTransparencia < 50}">
+              {{ m.indiceTransparencia }}%
+            </td>
+            <td class="text-right text-muted">{{ m.tasaAlerta }}%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

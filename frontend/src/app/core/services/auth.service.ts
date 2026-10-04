@@ -37,4 +37,10 @@ export class Auth {
   getToken(): string | null {
     return localStorage.getItem('token');
   }
+
+  getUsuarioActual(): any {
+  const userStr = localStorage.getItem('usuario');
+  return userStr ? JSON.parse(userStr) : null;
+}
+
 }

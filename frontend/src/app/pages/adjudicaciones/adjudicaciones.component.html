@@ -1,1 +1,72 @@
-<p>adjudicaciones works!</p>
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Registro de Adjudicaciones</h1>
+      <p>Historial y seguimiento de contratos otorgados a proveedores del Estado.</p>
+    </div>
+  </div>
+
+  <div class="search-bar-card">
+    <div class="search-input-wrapper">
+      <input 
+        type="text" 
+        placeholder="Buscar por NOG, título, institución, proveedor o NIT..." 
+        [(ngModel)]="searchTerm" 
+        class="search-input"
+      />
+    </div>
+
+    <div class="filter-group">
+      <label>Estado Contrato:</label>
+      <select [(ngModel)]="estadoFiltro" class="select-filter">
+        <option value="TODOS">Todos los estados</option>
+        <option value="EN_EJECUCION">En Ejecución</option>
+        <option value="FINALIZADO">Finalizado</option>
+        <option value="CANCELADO">Cancelado</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>NOG</th>
+          <th>PROCESO</th>
+          <th>INSTITUCIÓN</th>
+          <th>PROVEEDOR ADJUDICADO</th>
+          <th class="text-right">MONTO ADJUDICADO</th>
+          <th>ESTADO</th>
+          <th>FECHA</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of adjudicacionesFiltradas">
+          <td class="font-mono"><strong>{{ item.nog }}</strong></td>
+          <td class="title-cell">{{ item.tituloLicitacion }}</td>
+          <td>{{ item.entidad }}</td>
+          <td>
+            <div class="vendor-info">
+              <span class="vendor-name">{{ item.proveedorGanador }}</span>
+              <span class="vendor-nit font-mono">NIT: {{ item.nitProveedor }}</span>
+            </div>
+          </td>
+          <td class="text-right font-bold">Q{{ item.montoAdjudicado | number:'1.2-2' }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="{
+              'badge-process': item.estadoContrato === 'EN_EJECUCION',
+              'badge-success': item.estadoContrato === 'FINALIZADO',
+              'badge-danger': item.estadoContrato === 'CANCELADO'
+            }">
+              {{ item.estadoContrato.replace('_', ' ') }}
+            </span>
+          </td>
+          <td class="text-muted">{{ item.fechaAdjudicacion }}</td>
+        </tr>
+        <tr *ngIf="adjudicacionesFiltradas.length === 0">
+          <td colspan="7" class="no-data">No se encontraron adjudicaciones con los criterios especificados.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

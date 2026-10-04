@@ -1,1 +1,75 @@
-<p>usuarios works!</p>
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Gestión de Usuarios</h1>
+      <p>Administración de roles, permisos y accesos al sistema GovTrace.</p>
+    </div>
+  </div>
+
+  <div class="search-bar-card">
+    <div class="search-input-wrapper">
+      <input 
+        type="text" 
+        placeholder="Buscar por nombre, correo o departamento..." 
+        [(ngModel)]="searchTerm" 
+        class="search-input"
+      />
+    </div>
+
+    <div class="filter-group">
+      <label>Rol:</label>
+      <select [(ngModel)]="rolFiltro" class="select-filter">
+        <option value="TODOS">Todos los roles</option>
+        <option value="ADMINISTRADOR">Administrador</option>
+        <option value="AUDITOR">Auditor</option>
+        <option value="ANALISTA">Analista</option>
+        <option value="CIUDADANO">Ciudadano</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>USUARIO</th>
+          <th>CORREO ELECTRÓNICO</th>
+          <th>ROL</th>
+          <th>DEPARTAMENTO</th>
+          <th>ESTADO</th>
+          <th>ÚLTIMO ACCESO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of usuariosFiltrados">
+          <td class="title-cell">{{ item.nombre }}</td>
+          <td class="font-mono">{{ item.email }}</td>
+          <td>
+            <span class="role-badge" [ngClass]="{
+              'role-admin': item.rol === 'ADMINISTRADOR',
+              'role-auditor': item.rol === 'AUDITOR',
+              'role-analyst': item.rol === 'ANALISTA',
+              'role-user': item.rol === 'CIUDADANO'
+            }">
+              {{ item.rol }}
+            </span>
+          </td>
+          <td>{{ item.departamento }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="{
+              'badge-success': item.estado === 'ACTIVO',
+              'badge-warning': item.estado === 'INACTIVO',
+              'badge-danger': item.estado === 'BLOQUEADO'
+            }">
+              {{ item.estado }}
+            </span>
+          </td>
+          <td class="text-muted">{{ item.ultimoAcceso }}</td>
+        </tr>
+        <tr *ngIf="usuariosFiltrados.length === 0">
+          <td colspan="6" class="no-data">No se encontraron usuarios coincidentes.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

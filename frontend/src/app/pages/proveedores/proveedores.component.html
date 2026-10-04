@@ -1,1 +1,65 @@
-<p>proveedores works!</p>
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Directorio de Proveedores</h1>
+      <p>Consulta el historial, estado de cumplimiento y adjudicaciones de las empresas contratistas del Estado.</p>
+    </div>
+  </div>
+
+  <div class="search-bar-card">
+    <div class="search-input-wrapper">
+      <input 
+        type="text" 
+        placeholder="Buscar por NIT, nombre comercial o representante..." 
+        [(ngModel)]="searchTerm" 
+        class="search-input"
+      />
+    </div>
+
+    <div class="filter-group">
+      <label>Estado:</label>
+      <select [(ngModel)]="estadoFiltro" class="select-filter">
+        <option value="TODOS">Todos los estados</option>
+        <option value="ACTIVO">Activos</option>
+        <option value="BAJO_INVESTIGACION">Bajo Investigación ⚠️</option>
+        <option value="SUSPENDIDO">Suspendidos 🚫</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>NIT</th>
+          <th>NOMBRE COMERCIAL</th>
+          <th>REPRESENTANTE LEGAL</th>
+          <th class="text-center">CONTRATOS</th>
+          <th class="text-right">TOTAL CONTRATADO</th>
+          <th>ESTADO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of proveedoresFiltrados">
+          <td class="font-mono"><strong>{{ item.nit }}</strong></td>
+          <td class="title-cell">{{ item.nombre }}</td>
+          <td>{{ item.representanteLegal }}</td>
+          <td class="text-center font-bold">{{ item.contratosAdjudicados }}</td>
+          <td class="text-right font-bold">Q{{ item.montoTotalContratado | number:'1.2-2' }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="{
+              'badge-success': item.estado === 'ACTIVO',
+              'badge-warning': item.estado === 'BAJO_INVESTIGACION',
+              'badge-danger': item.estado === 'SUSPENDIDO'
+            }">
+              {{ item.estado.replace('_', ' ') }}
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="proveedoresFiltrados.length === 0">
+          <td colspan="6" class="no-data">No se encontraron proveedores que coincidan con la búsqueda.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

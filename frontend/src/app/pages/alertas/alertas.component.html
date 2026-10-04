@@ -1,1 +1,71 @@
-<p>alertas works!</p>
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Detección de Alertas y Anomalías</h1>
+      <p>Algoritmos automatizados para la identificación de sobreprecios, fraccionamientos y patrones irregulares.</p>
+    </div>
+  </div>
+
+  <!-- Buscador y Filtro -->
+  <div class="search-bar-card">
+    <div class="search-input-wrapper">
+      <input 
+        type="text" 
+        placeholder="Buscar por NOG, descripción o institución..." 
+        [(ngModel)]="searchTerm" 
+        class="search-input"
+      />
+    </div>
+
+    <div class="filter-group">
+      <label>Riesgo:</label>
+      <select [(ngModel)]="riesgoFiltro" class="select-filter">
+        <option value="TODOS">Todos los niveles</option>
+        <option value="ALTO">Alto Riesgo 🔴</option>
+        <option value="MEDIO">Riesgo Medio 🟡</option>
+        <option value="BAJO">Riesgo Bajo 🟢</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Tabla de Alertas -->
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>NOG</th>
+          <th>PROCESO AUDITADO</th>
+          <th>INSTITUCIÓN</th>
+          <th>TIPO DE ANOMALÍA</th>
+          <th class="text-right">DESVIACIÓN</th>
+          <th>RIESGO</th>
+          <th>FECHA</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of alertasFiltradas">
+          <td class="font-mono"><strong>{{ item.nog }}</strong></td>
+          <td class="title-cell">{{ item.tituloLicitacion || 'Proceso de Contratación' }}</td>
+          <td>{{ item.entidad }}</td>
+          <td>
+            <span class="anomaly-tag">{{ item.tipoAlerta.replace('_', ' ') }}</span>
+          </td>
+          <td class="text-right font-bold text-danger">+{{ item.desviacionPorcentaje }}%</td>
+          <td>
+            <span class="status-badge" [ngClass]="{
+              'badge-danger': item.nivelRiesgo === 'ALTO',
+              'badge-warning': item.nivelRiesgo === 'MEDIO',
+              'badge-success': item.nivelRiesgo === 'BAJO'
+            }">
+              {{ item.nivelRiesgo }}
+            </span>
+          </td>
+          <td class="text-muted">{{ item.fechaDeteccion }}</td>
+        </tr>
+        <tr *ngIf="alertasFiltradas.length === 0">
+          <td colspan="7" class="no-data">No se encontraron alertas de irregularidades coincidentes.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
