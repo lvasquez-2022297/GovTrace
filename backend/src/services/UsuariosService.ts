@@ -1,5 +1,5 @@
 import { UsuariosRepository, UsuarioSinPassword } from '../data/UsuariosRepository';
-import { Usuario } from '../models/Usuarios';
+import { Usuario, RolUsuario } from '../models/Usuarios';
 import { CryptoUtils } from '../utils/CryptoUtils';
 import { JwtUtils } from '../utils/JwtUtils';
 import { AppError } from '../utils/AppError';
@@ -7,10 +7,16 @@ import { AppError } from '../utils/AppError';
 export type CreacionUsuario = Omit<Usuario, 'id' | 'creado_en'>;
 export type UsuarioPublico = UsuarioSinPassword;
 
+const ROLES_VALIDOS: RolUsuario[] = ['ADMIN', 'AUDITOR', 'CIUDADANO'];
+
 export interface RegistroDTO {
   nombre: string;
   email: string;
   password: string;
+}
+
+export interface CrearUsuarioAdminDTO extends RegistroDTO {
+  rol?: RolUsuario;
 }
 
 export interface LoginDTO {
@@ -76,10 +82,35 @@ export class UsuariosService {
       nombre,
       email,
       password: passwordHasheada,
-      rol: 'CIUDADANO',
+      rol: 'CIUDADANO'
     };
 
     return await this.repo.crear(nuevoUsuario);
+  }
+
+  async crearUsuarioAdmin(datos: CrearUsuarioAdminDTO): Promise<UsuarioPublico> {
+    const rol: RolUsuario = datos.rol ?? 'CIUDADANO';
+    if (!ROLES_VALIDOS.includes(rol)) {
+      throw new AppError('Rol inválido. Usa ADMIN, AUDITOR o CIUDADANO.', 400);
+    }
+
+    const nombre = datos.nombre?.trim();
+    const email = datos.email?.trim().toLowerCase();
+
+    if (!email || !this.validarFormatoEmail(email)) {
+      throw new AppError('El formato del correo es inválido.', 400);
+    }
+    if (!nombre || nombre.length < 3) {
+      throw new AppError('El nombre debe tener al menos 3 caracteres.', 400);
+    }
+    this.validarPassword(datos.password);
+
+    if (await this.repo.obtenerPorEmail(email)) {
+      throw new AppError(`El correo ${email} ya se encuentra registrado.`, 409);
+    }
+
+    const password = await CryptoUtils.hashPassword(datos.password);
+    return await this.repo.crear({ nombre, email, password, rol });
   }
 
   async login({ email, password }: LoginDTO): Promise<LoginResultado> {
@@ -103,7 +134,7 @@ export class UsuariosService {
 
     const token = JwtUtils.generarToken({
       id: usuario.id,
-      rol: usuario.rol,
+      rol: usuario.rol
     });
 
     return { token, usuario: this.sanitizar(usuario) };
@@ -138,6 +169,15 @@ export class UsuariosService {
     }
 
     const actualizado = await this.repo.actualizar(id, cambios);
+    if (!actualizado) throw new AppError(`Usuario con ID ${id} no encontrado.`, 404);
+    return actualizado;
+  }
+
+  async cambiarRol(id: number, rol: RolUsuario): Promise<UsuarioPublico> {
+    if (!ROLES_VALIDOS.includes(rol)) {
+      throw new AppError('Rol inválido. Usa ADMIN, AUDITOR o CIUDADANO.', 400);
+    }
+    const actualizado = await this.repo.actualizarRol(id, rol);
     if (!actualizado) throw new AppError(`Usuario con ID ${id} no encontrado.`, 404);
     return actualizado;
   }

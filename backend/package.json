@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Backend para plataforma de transparencia GovTrace",
   "main": "dist/server.js",
- "scripts": {
-  "dev": "tsx src/index.ts",
-  "server:watch": "tsx watch src/index.ts"
-},
+  "scripts": {
+    "dev": "tsx --env-file=.env src/index.ts",
+    "server:watch": "tsx watch --env-file=.env src/index.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

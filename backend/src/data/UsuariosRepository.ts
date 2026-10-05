@@ -19,6 +19,7 @@ export class UsuariosRepository {
     return res.rows[0] || null;
   }
 
+  // Única consulta que devuelve password: la necesita el login
   async obtenerPorEmail(email: string): Promise<Usuario | null> {
     const res = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
     return res.rows[0] || null;
@@ -34,6 +35,7 @@ export class UsuariosRepository {
     return res.rows[0];
   }
 
+  // El rol NO se actualiza aquí: para eso existe actualizarRol
   async actualizar(
     id: number,
     cambios: Partial<Pick<Usuario, 'nombre' | 'email' | 'password'>>
@@ -46,6 +48,15 @@ export class UsuariosRepository {
        WHERE id = $4
        RETURNING id, nombre, email, rol, creado_en`,
       [cambios.nombre ?? null, cambios.email ?? null, cambios.password ?? null, id]
+    );
+    return res.rows[0] || null;
+  }
+
+  async actualizarRol(id: number, rol: string): Promise<UsuarioSinPassword | null> {
+    const res = await pool.query(
+      `UPDATE usuarios SET rol = $1 WHERE id = $2
+       RETURNING id, nombre, email, rol, creado_en`,
+      [rol, id]
     );
     return res.rows[0] || null;
   }

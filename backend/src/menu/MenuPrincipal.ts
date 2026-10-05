@@ -107,7 +107,7 @@ export class MenuPrincipal {
           const rolInput = await this.preguntar('Rol (ADMIN/AUDITOR/CIUDADANO): ');
 
           const rol = (rolInput.toUpperCase() as any) || 'CIUDADANO';
-          const nuevo = await this.usuariosService.registrarUsuario({ nombre, email, password, rol });
+          const nuevo = await this.usuariosService.crearUsuarioAdmin({ nombre, email, password, rol });
           console.log('\n Usuario creado exitosamente:', nuevo);
           await this.esperarTecla();
         } else if (op === '4') {

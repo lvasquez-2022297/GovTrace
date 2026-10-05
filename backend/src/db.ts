@@ -4,11 +4,11 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: Number(process.env.DB_PORT) || 5432,
+  host: process.env.DB_HOST || '127.0.0.1',
+  port: Number(process.env.DB_PORT) || 5433,        
   user: process.env.DB_USER || 'postgres',
   password: String(process.env.DB_PASSWORD || 'admin'),
-  database: process.env.DB_NAME || 'govtrace',
+  database: process.env.DB_NAME || 'govtrace_db',   
 });
 
 export const conectarDB = async (): Promise<void> => {
@@ -18,6 +18,6 @@ export const conectarDB = async (): Promise<void> => {
     client.release();
   } catch (err: any) {
     console.error('Error al conectar a PostgreSQL:', err.message);
-    process.exit(1);
+    throw err; 
   }
 };

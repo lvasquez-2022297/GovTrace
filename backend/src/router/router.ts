@@ -4,7 +4,8 @@ import { ProveedoresService } from '../services/ProveedoresService';
 import { LicitacionesService } from '../services/LicitacionesService';
 import { AdjudicacionesService } from '../services/AdjudicacionesService';
 import { AlertasService } from '../services/AlertasService';
-import { verificarToken, requiereRol, propioOAdmin } from '../middlewares/auth';
+import { verificarToken, requiereRol, propioOAdmin, AuthRequest } from '../middlewares/auth';
+import { AppError } from '../utils/AppError';
 
 const router = Router();
 
@@ -14,73 +15,111 @@ const licitacionesService = new LicitacionesService();
 const adjudicacionesService = new AdjudicacionesService();
 const alertasService = new AlertasService();
 
-router.post('/auth/register', async (req: Request, res: Response, next: NextFunction) => {
-  try { res.status(201).json({ success: true, data: await usuariosService.registrarUsuario(req.body) }); } catch (e) { next(e); }
-});
-router.post('/auth/login', async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json({ success: true, data: await usuariosService.login(req.body) }); } catch (e) { next(e); }
-});
+const soloAdmin = [verificarToken, requiereRol('ADMIN')];
 
-router.get('/usuarios', verificarToken, requiereRol('ADMIN', 'AUDITOR'), async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json({ success: true, data: await usuariosService.listarUsuarios() }); } catch (e) { next(e); }
-});
-router.get('/usuarios/:id', verificarToken, propioOAdmin, async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json({ success: true, data: await usuariosService.obtenerUsuarioPorId(Number(req.params.id)) }); } catch (e) { next(e); }
-});
-router.put('/usuarios/:id', verificarToken, propioOAdmin, async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json({ success: true, data: await usuariosService.actualizarUsuario(Number(req.params.id), req.body) }); } catch (e) { next(e); }
-});
-router.delete('/usuarios/:id', verificarToken, requiereRol('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
-  try { await usuariosService.eliminarUsuario(Number(req.params.id)); res.json({ success: true, message: 'Usuario eliminado' }); } catch (e) { next(e); }
-});
+type Handler = (req: Request, res: Response) => Promise<void>;
+const ruta = (fn: Handler) => async (req: Request, res: Response, next: NextFunction) => {
+  try { await fn(req, res); } catch (e) { next(e); }
+};
+const id = (req: Request) => Number(req.params.id);
 
-router.get('/proveedores', async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json({ success: true, data: await proveedoresService.listarProveedores() }); } catch (e) { next(e); }
-});
-router.get('/proveedores/:id', async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json({ success: true, data: await proveedoresService.obtenerProveedorPorId(Number(req.params.id)) }); } catch (e) { next(e); }
-});
-router.post('/proveedores', verificarToken, async (req: Request, res: Response, next: NextFunction) => {
-  try { res.status(201).json({ success: true, data: await proveedoresService.registrarProveedor(req.body) }); } catch (e) { next(e); }
-});
-router.put('/proveedores/:id', verificarToken, async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json({ success: true, data: await proveedoresService.actualizarProveedor(Number(req.params.id), req.body) }); } catch (e) { next(e); }
-});
-router.delete('/proveedores/:id', verificarToken, async (req: Request, res: Response, next: NextFunction) => {
-  try { await proveedoresService.eliminarProveedor(Number(req.params.id)); res.json({ success: true, message: 'Proveedor eliminado' }); } catch (e) { next(e); }
-});
+router.post('/auth/register', ruta(async (req, res) => {
+  res.status(201).json({ success: true, data: await usuariosService.registrarUsuario(req.body) });
+}));
+router.post('/auth/login', ruta(async (req, res) => {
+  res.json({ success: true, data: await usuariosService.login(req.body) });
+}));
 
-router.get('/licitaciones', async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json({ success: true, data: await licitacionesService.listarLicitaciones() }); } catch (e) { next(e); }
-});
-router.get('/licitaciones/:id', async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json({ success: true, data: await licitacionesService.obtenerLicitacionPorId(Number(req.params.id)) }); } catch (e) { next(e); }
-});
-router.post('/licitaciones', verificarToken, async (req: Request, res: Response, next: NextFunction) => {
-  try { res.status(201).json({ success: true, data: await licitacionesService.crearLicitacion(req.body) }); } catch (e) { next(e); }
-});
-router.put('/licitaciones/:id', verificarToken, async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json({ success: true, data: await licitacionesService.actualizarLicitacion(Number(req.params.id), req.body) }); } catch (e) { next(e); }
-});
-router.delete('/licitaciones/:id', verificarToken, async (req: Request, res: Response, next: NextFunction) => {
-  try { await licitacionesService.eliminarLicitacion(Number(req.params.id)); res.json({ success: true, message: 'Licitación eliminada' }); } catch (e) { next(e); }
-});
+router.get('/usuarios', verificarToken, requiereRol('ADMIN', 'AUDITOR'), ruta(async (req, res) => {
+  res.json({ success: true, data: await usuariosService.listarUsuarios() });
+}));
+router.get('/usuarios/:id', verificarToken, propioOAdmin, ruta(async (req, res) => {
+  res.json({ success: true, data: await usuariosService.obtenerUsuarioPorId(id(req)) });
+}));
+router.post('/usuarios', ...soloAdmin, ruta(async (req, res) => {
+  res.status(201).json({ success: true, data: await usuariosService.crearUsuarioAdmin(req.body) });
+}));
+router.put('/usuarios/:id', verificarToken, propioOAdmin, ruta(async (req, res) => {
+  res.json({ success: true, data: await usuariosService.actualizarUsuario(id(req), req.body) });
+}));
+router.put('/usuarios/:id/rol', ...soloAdmin, ruta(async (req, res) => {
+  if ((req as AuthRequest).usuario?.id === id(req)) {
+    throw new AppError('No puedes cambiar tu propio rol.', 400);
+  }
+  res.json({ success: true, data: await usuariosService.cambiarRol(id(req), req.body.rol) });
+}));
+router.delete('/usuarios/:id', ...soloAdmin, ruta(async (req, res) => {
+  if ((req as AuthRequest).usuario?.id === id(req)) {
+    throw new AppError('No puedes eliminar tu propia cuenta.', 400);
+  }
+  await usuariosService.eliminarUsuario(id(req));
+  res.json({ success: true, message: 'Usuario eliminado' });
+}));
 
-router.get('/adjudicaciones', async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json({ success: true, data: await adjudicacionesService.listarAdjudicaciones() }); } catch (e) { next(e); }
-});
-router.get('/adjudicaciones/:id', async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json({ success: true, data: await adjudicacionesService.obtenerAdjudicacionPorId(Number(req.params.id)) }); } catch (e) { next(e); }
-});
-router.post('/adjudicaciones', verificarToken, async (req: Request, res: Response, next: NextFunction) => {
-  try { res.status(201).json({ success: true, data: await adjudicacionesService.adjudicarLicitacion(req.body) }); } catch (e) { next(e); }
-});
+router.get('/proveedores', ruta(async (req, res) => {
+  res.json({ success: true, data: await proveedoresService.listarProveedores() });
+}));
+router.get('/proveedores/:id', ruta(async (req, res) => {
+  res.json({ success: true, data: await proveedoresService.obtenerProveedorPorId(id(req)) });
+}));
+router.post('/proveedores', ...soloAdmin, ruta(async (req, res) => {
+  res.status(201).json({ success: true, data: await proveedoresService.registrarProveedor(req.body) });
+}));
+router.put('/proveedores/:id', ...soloAdmin, ruta(async (req, res) => {
+  res.json({ success: true, data: await proveedoresService.actualizarProveedor(id(req), req.body) });
+}));
+router.delete('/proveedores/:id', ...soloAdmin, ruta(async (req, res) => {
+  await proveedoresService.eliminarProveedor(id(req));
+  res.json({ success: true, message: 'Proveedor eliminado' });
+}));
 
-router.get('/alertas', async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json({ success: true, data: await alertasService.listarAlertas() }); } catch (e) { next(e); }
-});
-router.post('/alertas', verificarToken, async (req: Request, res: Response, next: NextFunction) => {
-  try { res.status(201).json({ success: true, data: await alertasService.registrarAlerta(req.body) }); } catch (e) { next(e); }
-});
+router.get('/licitaciones', ruta(async (req, res) => {
+  res.json({ success: true, data: await licitacionesService.listarLicitaciones() });
+}));
+router.get('/licitaciones/:id', ruta(async (req, res) => {
+  res.json({ success: true, data: await licitacionesService.obtenerLicitacionPorId(id(req)) });
+}));
+router.post('/licitaciones', ...soloAdmin, ruta(async (req, res) => {
+  const datos = { ...req.body, creado_por: (req as AuthRequest).usuario?.id };
+  res.status(201).json({ success: true, data: await licitacionesService.crearLicitacion(datos) });
+}));
+router.put('/licitaciones/:id', ...soloAdmin, ruta(async (req, res) => {
+  res.json({ success: true, data: await licitacionesService.actualizarLicitacion(id(req), req.body) });
+}));
+router.delete('/licitaciones/:id', ...soloAdmin, ruta(async (req, res) => {
+  await licitacionesService.eliminarLicitacion(id(req));
+  res.json({ success: true, message: 'Licitación eliminada' });
+}));
+
+router.get('/adjudicaciones', ruta(async (req, res) => {
+  res.json({ success: true, data: await adjudicacionesService.listarAdjudicaciones() });
+}));
+router.get('/adjudicaciones/:id', ruta(async (req, res) => {
+  res.json({ success: true, data: await adjudicacionesService.obtenerAdjudicacionPorId(id(req)) });
+}));
+router.post('/adjudicaciones', ...soloAdmin, ruta(async (req, res) => {
+  res.status(201).json({ success: true, data: await adjudicacionesService.adjudicarLicitacion(req.body) });
+}));
+router.put('/adjudicaciones/:id', ...soloAdmin, ruta(async (req, res) => {
+  res.json({ success: true, data: await adjudicacionesService.actualizarAdjudicacion(id(req), req.body) });
+}));
+router.delete('/adjudicaciones/:id', ...soloAdmin, ruta(async (req, res) => {
+  await adjudicacionesService.eliminarAdjudicacion(id(req));
+  res.json({ success: true, message: 'Adjudicación eliminada' });
+}));
+
+router.get('/alertas', ruta(async (req, res) => {
+  res.json({ success: true, data: await alertasService.listarAlertas() });
+}));
+router.post('/alertas', ...soloAdmin, ruta(async (req, res) => {
+  res.status(201).json({ success: true, data: await alertasService.registrarAlerta(req.body) });
+}));
+router.put('/alertas/:id', ...soloAdmin, ruta(async (req, res) => {
+  res.json({ success: true, data: await alertasService.actualizarAlerta(id(req), req.body) });
+}));
+router.delete('/alertas/:id', ...soloAdmin, ruta(async (req, res) => {
+  await alertasService.eliminarAlerta(id(req));
+  res.json({ success: true, message: 'Alerta eliminada' });
+}));
 
 export default router;
