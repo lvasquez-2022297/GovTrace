@@ -1,12 +1,24 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { LicitacionesService, Licitacion } from '../../core/services/licitaciones.service';
+import {
+  AbstractControl, FormBuilder, FormGroup, FormsModule,
+  ReactiveFormsModule, ValidationErrors, Validators
+} from '@angular/forms';
+import {
+  LicitacionesService, Licitacion, LicitacionPayload
+} from '../../core/services/licitaciones.service';
+import { Auth } from '../../core/services/auth.service';
+
+function fechasValidas(group: AbstractControl): ValidationErrors | null {
+  const inicio = group.get('fecha_inicio')?.value;
+  const cierre = group.get('fecha_cierre')?.value;
+  return inicio && cierre && cierre < inicio ? { fechas: true } : null;
+}
 
 @Component({
   selector: 'app-licitaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './licitaciones.component.html',
   styleUrl: './licitaciones.component.css'
 })
@@ -18,9 +30,41 @@ export class Licitaciones implements OnInit {
   searchTerm = '';
   estadoFiltro = 'TODOS';
 
-  constructor(private licitacionesService: LicitacionesService) {}
+  esAdmin = false;
+
+  modalAbierto = false;
+  editandoId: number | null = null;
+  guardando = false;
+  errorForm = '';
+  form: FormGroup;
+
+  constructor(
+    private licitacionesService: LicitacionesService,
+    private authService: Auth,
+    private fb: FormBuilder
+  ) {
+    this.form = this.fb.group(
+      {
+        codigo_licitacion: ['', [Validators.required, Validators.maxLength(50)]],
+        titulo: ['', [Validators.required, Validators.maxLength(200)]],
+        descripcion: [''],
+        entidad: ['', [Validators.maxLength(150)]],
+        presupuesto_asignado: [null as number | null, [Validators.required, Validators.min(0.01)]],
+        estado: ['PUBLICADA', [Validators.required]],
+        fecha_inicio: ['', [Validators.required]],
+        fecha_cierre: ['', [Validators.required]]
+      },
+      { validators: fechasValidas }
+    );
+  }
 
   ngOnInit(): void {
+    this.esAdmin = this.authService.esAdmin();
+    this.cargar();
+  }
+
+  cargar(): void {
+    this.cargando = true;
     this.licitacionesService.getAll().subscribe({
       next: (data) => {
         this.licitaciones = data;
@@ -48,5 +92,91 @@ export class Licitaciones implements OnInit {
 
       return coincideTexto && coincideEstado;
     });
+  }
+
+  abrirCrear(): void {
+    this.editandoId = null;
+    this.errorForm = '';
+    this.form.reset({ estado: 'PUBLICADA', presupuesto_asignado: null });
+    this.modalAbierto = true;
+  }
+
+  abrirEditar(item: Licitacion): void {
+    this.editandoId = item.id;
+    this.errorForm = '';
+    this.form.reset({
+      codigo_licitacion: item.codigo_licitacion,
+      titulo: item.titulo,
+      descripcion: item.descripcion ?? '',
+      entidad: item.entidad ?? '',
+      presupuesto_asignado: Number(item.presupuesto_asignado),
+      estado: item.estado,
+      fecha_inicio: (item.fecha_inicio ?? '').slice(0, 10),
+      fecha_cierre: (item.fecha_cierre ?? '').slice(0, 10)
+    });
+    this.modalAbierto = true;
+  }
+
+  cerrarModal(): void {
+    this.modalAbierto = false;
+  }
+
+  guardar(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.guardando = true;
+    this.errorForm = '';
+
+    const v = this.form.value;
+    const payload: LicitacionPayload = {
+      codigo_licitacion: v.codigo_licitacion.trim(),
+      titulo: v.titulo.trim(),
+      descripcion: v.descripcion?.trim() || undefined,
+      entidad: v.entidad?.trim() || undefined,
+      presupuesto_asignado: Number(v.presupuesto_asignado),
+      estado: v.estado,
+      fecha_inicio: v.fecha_inicio,
+      fecha_cierre: v.fecha_cierre
+    };
+
+    const peticion = this.editandoId
+      ? this.licitacionesService.actualizar(this.editandoId, payload)
+      : this.licitacionesService.crear(payload);
+
+    peticion.subscribe({
+      next: () => {
+        this.guardando = false;
+        this.modalAbierto = false;
+        this.cargar();
+      },
+      error: (err) => {
+        this.guardando = false;
+        this.errorForm = err.error?.message || 'No se pudo guardar la licitación.';
+      }
+    });
+  }
+
+  eliminar(item: Licitacion): void {
+    const aviso =
+      `¿Eliminar la licitación ${item.codigo_licitacion}?\n\n` +
+      'También se borrarán su adjudicación y sus alertas. Esta acción no se puede deshacer.';
+    if (!confirm(aviso)) return;
+
+    this.licitacionesService.eliminar(item.id).subscribe({
+      next: () => {
+        this.licitaciones = this.licitaciones.filter((l) => l.id !== item.id);
+      },
+      error: (err) => {
+        this.errorMensaje = err.error?.message || 'No se pudo eliminar la licitación.';
+      }
+    });
+  }
+
+  campoInvalido(nombre: string): boolean {
+    const c = this.form.get(nombre);
+    return !!c && c.invalid && c.touched;
   }
 }

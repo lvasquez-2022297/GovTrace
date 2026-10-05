@@ -1,20 +1,4 @@
 <div class="home-container">
-  <!-- Navbar pública independiente -->
-  <nav class="public-nav">
-    <div class="brand">
-      <strong>GovTrace</strong>
-      <span class="badge">AUDITORÍA CIUDADANA</span>
-    </div>
-    <div class="nav-actions">
-      <ng-container *ngIf="!authService.isAuthenticated(); else loggedInView">
-        <a routerLink="/login" class="btn-secondary">Iniciar Sesión</a>
-        <a routerLink="/register" class="btn-primary">Registrarse</a>
-      </ng-container>
-      <ng-template #loggedInView>
-        <a routerLink="/dashboard" class="btn-primary">Ir al Dashboard ➔</a>
-      </ng-template>
-    </div>
-  </nav>
 
   <!-- Hero Section -->
   <section class="hero-section">

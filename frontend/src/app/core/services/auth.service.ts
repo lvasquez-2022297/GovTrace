@@ -54,6 +54,10 @@ export class Auth {
     }
   }
 
+  esAdmin(): boolean {
+    return this.getUsuarioActual()?.rol === 'ADMIN';
+  }
+
   isAuthenticated(): boolean {
     const token = this.getToken();
     if (!token || token === 'undefined') return false;

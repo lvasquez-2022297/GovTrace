@@ -4,6 +4,9 @@
       <h1>Monitoreo de Licitaciones</h1>
       <p>Consulta y audita los procesos de contratación del Estado en tiempo real.</p>
     </div>
+    <button *ngIf="esAdmin" type="button" class="btn-nuevo" (click)="abrirCrear()">
+      + Nueva licitación
+    </button>
   </div>
 
   <div class="search-bar-card">
@@ -41,6 +44,7 @@
           <th class="text-right">PRESUPUESTO</th>
           <th>ESTADO</th>
           <th>FECHA INICIO</th>
+          <th *ngIf="esAdmin">ACCIONES</th>
         </tr>
       </thead>
       <tbody>
@@ -60,11 +64,89 @@
             </span>
           </td>
           <td class="text-muted">{{ item.fecha_inicio | date:'dd/MM/yyyy' }}</td>
+          <td *ngIf="esAdmin" class="acciones">
+            <button type="button" class="btn-accion btn-editar" (click)="abrirEditar(item)">Editar</button>
+            <button type="button" class="btn-accion btn-eliminar" (click)="eliminar(item)">Eliminar</button>
+          </td>
         </tr>
         <tr *ngIf="licitacionesFiltradas.length === 0">
-          <td colspan="6" class="no-data">No se encontraron licitaciones con los criterios de búsqueda.</td>
+          <td [attr.colspan]="esAdmin ? 7 : 6" class="no-data">
+            No se encontraron licitaciones con los criterios de búsqueda.
+          </td>
         </tr>
       </tbody>
     </table>
+  </div>
+</div>
+
+<!-- Modal crear / editar -->
+<div class="modal-backdrop" *ngIf="modalAbierto" (click)="cerrarModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <h2>{{ editandoId ? 'Editar licitación' : 'Nueva licitación' }}</h2>
+
+    <p *ngIf="errorForm" class="error-banner">{{ errorForm }}</p>
+
+    <form [formGroup]="form" (ngSubmit)="guardar()">
+      <div class="form-row">
+        <div class="form-field">
+          <label for="codigo">Código</label>
+          <input id="codigo" formControlName="codigo_licitacion" placeholder="LIC-2026-011" />
+          <small class="error-text" *ngIf="campoInvalido('codigo_licitacion')">El código es obligatorio.</small>
+        </div>
+        <div class="form-field">
+          <label for="estado">Estado</label>
+          <select id="estado" formControlName="estado">
+            <option value="PUBLICADA">Publicada</option>
+            <option value="ADJUDICADA">Adjudicada</option>
+            <option value="CON_ALERTA">Con alerta</option>
+            <option value="CANCELADA">Cancelada</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="titulo">Título</label>
+        <input id="titulo" formControlName="titulo" />
+        <small class="error-text" *ngIf="campoInvalido('titulo')">El título es obligatorio.</small>
+      </div>
+
+      <div class="form-field">
+        <label for="descripcion">Descripción</label>
+        <textarea id="descripcion" rows="3" formControlName="descripcion"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="entidad">Institución</label>
+          <input id="entidad" formControlName="entidad" placeholder="Ministerio de Salud Pública" />
+        </div>
+        <div class="form-field">
+          <label for="presupuesto">Presupuesto (Q)</label>
+          <input id="presupuesto" type="number" step="0.01" formControlName="presupuesto_asignado" />
+          <small class="error-text" *ngIf="campoInvalido('presupuesto_asignado')">Debe ser mayor a 0.</small>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="inicio">Fecha de inicio</label>
+          <input id="inicio" type="date" formControlName="fecha_inicio" />
+        </div>
+        <div class="form-field">
+          <label for="cierre">Fecha de cierre</label>
+          <input id="cierre" type="date" formControlName="fecha_cierre" />
+        </div>
+      </div>
+      <small class="error-text" *ngIf="form.errors?.['fechas'] && form.touched">
+        La fecha de cierre no puede ser anterior a la de inicio.
+      </small>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancelar" (click)="cerrarModal()">Cancelar</button>
+        <button type="submit" class="btn-nuevo" [disabled]="guardando">
+          {{ guardando ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+    </form>
   </div>
 </div>

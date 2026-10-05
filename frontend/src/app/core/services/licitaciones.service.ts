@@ -12,12 +12,28 @@ export interface Licitacion {
   titulo: string;
   descripcion?: string;
   entidad?: string;
-  presupuesto_asignado: number | string; // PostgreSQL devuelve DECIMAL como string
+  presupuesto_asignado: number | string; 
   estado: EstadoLicitacion;
   fecha_inicio: string;
   fecha_cierre: string;
   creado_por?: number;
   creado_en: string;
+}
+
+export interface LicitacionPayload {
+  codigo_licitacion: string;
+  titulo: string;
+  descripcion?: string;
+  entidad?: string;
+  presupuesto_asignado: number;
+  estado: EstadoLicitacion;
+  fecha_inicio: string;
+  fecha_cierre: string;
+}
+
+interface ApiOne<T> {
+  success: boolean;
+  data: T;
 }
 
 @Injectable({
@@ -32,5 +48,17 @@ export class LicitacionesService {
     return this.http
       .get<{ success: boolean; data: Licitacion[] }>(this.apiUrl)
       .pipe(map((res) => res.data));
+  }
+
+  crear(payload: LicitacionPayload): Observable<Licitacion> {
+    return this.http.post<ApiOne<Licitacion>>(this.apiUrl, payload).pipe(map((r) => r.data));
+  }
+
+  actualizar(id: number, payload: LicitacionPayload): Observable<Licitacion> {
+    return this.http.put<ApiOne<Licitacion>>(`${this.apiUrl}/${id}`, payload).pipe(map((r) => r.data));
+  }
+
+  eliminar(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }
