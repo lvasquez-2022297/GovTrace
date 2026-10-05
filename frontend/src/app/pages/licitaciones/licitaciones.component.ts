@@ -11,58 +11,39 @@ import { LicitacionesService, Licitacion } from '../../core/services/licitacione
   styleUrl: './licitaciones.component.css'
 })
 export class Licitaciones implements OnInit {
-  licitaciones: Licitacion[] = [
-    {
-      id: 1,
-      noNog: 'NOG-1829304',
-      titulo: 'Adquisición de Insumos Médicos Quirúrgicos',
-      entidad: 'Ministerio de Salud Pública',
-      montoEstimado: 1250000,
-      estado: 'EN_PROCESO',
-      fechaPublicacion: '2026-09-15'
-    },
-    {
-      id: 2,
-      noNog: 'NOG-9981234',
-      titulo: 'Mantenimiento Red Vial Ruta Interamericana',
-      entidad: 'Ministerio de Comunicaciones',
-      montoEstimado: 8500000,
-      estado: 'ALERTA',
-      fechaPublicacion: '2026-09-18'
-    },
-    {
-      id: 3,
-      noNog: 'NOG-3341092',
-      titulo: 'Suministro de Textos Escolares 2027',
-      entidad: 'Ministerio de Educación',
-      montoEstimado: 3400000,
-      estado: 'ADJUDICADA',
-      fechaPublicacion: '2026-08-30'
-    }
-  ];
+  licitaciones: Licitacion[] = [];
+  cargando = true;
+  errorMensaje = '';
 
-  searchTerm: string = '';
-  estadoFiltro: string = 'TODOS';
+  searchTerm = '';
+  estadoFiltro = 'TODOS';
 
   constructor(private licitacionesService: LicitacionesService) {}
 
   ngOnInit(): void {
     this.licitacionesService.getAll().subscribe({
-      next: (data: Licitacion[]) => {
-        if (data && data.length > 0) {
-          this.licitaciones = data;
-        }
+      next: (data) => {
+        this.licitaciones = data;
+        this.cargando = false;
       },
-      error: (err: unknown) => console.warn('Cargando licitaciones de prueba:', err)
+      error: (err) => {
+        console.error('Error cargando licitaciones:', err);
+        this.errorMensaje = 'No se pudieron cargar las licitaciones. Intenta de nuevo más tarde.';
+        this.cargando = false;
+      }
     });
   }
 
   get licitacionesFiltradas(): Licitacion[] {
-    return this.licitaciones.filter(item => {
-      const coincideTexto = item.titulo.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                            item.noNog.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                            item.entidad.toLowerCase().includes(this.searchTerm.toLowerCase());
-      
+    const texto = this.searchTerm.trim().toLowerCase();
+
+    return this.licitaciones.filter((item) => {
+      const coincideTexto =
+        !texto ||
+        item.titulo.toLowerCase().includes(texto) ||
+        item.codigo_licitacion.toLowerCase().includes(texto) ||
+        (item.entidad ?? '').toLowerCase().includes(texto);
+
       const coincideEstado = this.estadoFiltro === 'TODOS' || item.estado === this.estadoFiltro;
 
       return coincideTexto && coincideEstado;

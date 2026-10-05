@@ -20,14 +20,17 @@ interface IndiceMinisterio {
 })
 export class Dashboard implements OnInit {
   metrics: DashboardMetrics = {
-    totalPresupuesto: 1248.5,
-    alertasActivas: 142,
-    ministeriosAuditados: 18,
-    proveedoresRegistrados: 4820
+    totalPresupuesto: 0,
+    alertasActivas: 0,
+    ministeriosAuditados: 0,
+    proveedoresRegistrados: 0
   };
 
-  searchQuery: string = '';
-  filtroSeleccionado: string = 'Todos';
+  cargando = true;
+  errorMensaje = '';
+
+  searchQuery = '';
+  filtroSeleccionado = 'Todos';
 
   ministeriosIndex: IndiceMinisterio[] = [
     { ranking: 1, institucion: 'Ministerio de Finanzas', indiceTransparencia: 96.4, tasaAlerta: 1.2 },
@@ -42,12 +45,13 @@ export class Dashboard implements OnInit {
   ngOnInit(): void {
     this.dashboardService.getMetrics().subscribe({
       next: (data) => {
-        if (data) {
-          this.metrics = data;
-        }
+        this.metrics = data;
+        this.cargando = false;
       },
-      error: (err: any) => {
-        console.warn('Cargando datos estáticos del Dashboard por defecto:', err);
+      error: (err) => {
+        console.error('Error cargando métricas del dashboard:', err);
+        this.errorMensaje = 'No se pudieron cargar las métricas. Intenta de nuevo más tarde.';
+        this.cargando = false;
       }
     });
   }

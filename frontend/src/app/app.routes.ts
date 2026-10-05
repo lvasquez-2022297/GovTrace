@@ -17,7 +17,7 @@ export const routes: Routes = [
   { path: 'login', component: Login },
   { path: 'register', component: Register },
   { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
-  { path: 'usuarios', component: Usuarios, canActivate: [authGuard, roleGuard], data: { rol: 'ADMIN' } },
+  { path: 'usuarios', component: Usuarios, canActivate: [authGuard, roleGuard], data: { roles: ['ADMIN', 'AUDITOR'] } },
   { path: 'proveedores', component: Proveedores, canActivate: [authGuard] },
   { path: 'licitaciones', component: Licitaciones, canActivate: [authGuard] },
   { path: 'adjudicaciones', component: Adjudicaciones, canActivate: [authGuard] },

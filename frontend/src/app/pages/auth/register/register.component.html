@@ -32,14 +32,13 @@
         </small>
       </div>
 
-      <div class="form-group">
-        <label for="rol">Rol de Usuario</label>
-        <select id="rol" formControlName="rol">
-          <option value="CIUDADANO">Ciudadano</option>
-          <option value="AUDITOR">Auditor</option>
-          <option value="ADMIN">Administrador</option>
-        </select>
-      </div>
+      <small *ngIf="registerForm.get('nombre')?.touched && registerForm.get('nombre')?.invalid" class="error-text">
+  El nombre debe tener al menos 3 caracteres.
+</small>
+
+<small *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.invalid" class="error-text">
+  Mínimo 6 caracteres, con al menos una letra y un número.
+</small>
 
       <button type="submit" [disabled]="registerForm.invalid || loading" class="btn-primary">
         {{ loading ? 'Registrando...' : 'Registrarse' }}

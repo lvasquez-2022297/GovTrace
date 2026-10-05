@@ -1,28 +1,37 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, Usuario } from '../models/usuario.model';
+import { AuthResponse, LoginDTO, RegistroDTO, Usuario } from '../models/usuario.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+}
+
+@Injectable({ providedIn: 'root' })
 export class Auth {
-  private apiUrl = `${environment.apiUrl}/auth`;
+  private api = `${environment.apiUrl}/auth`;
 
   constructor(private http: HttpClient) {}
 
-  login(credentials: { email: string; password: string }): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
-      tap((res: AuthResponse) => {
-        localStorage.setItem('token', res.token);
-        localStorage.setItem('usuario', JSON.stringify(res.usuario));
-      })
-    );
+  register(datos: RegistroDTO): Observable<Usuario> {
+    return this.http
+      .post<ApiResponse<Usuario>>(`${this.api}/register`, datos)
+      .pipe(map((res) => res.data));
   }
 
-  register(userData: Partial<Usuario>): Observable<Usuario> {
-    return this.http.post<Usuario>(`${this.apiUrl}/register`, userData);
+  login(credenciales: LoginDTO): Observable<AuthResponse> {
+    return this.http
+      .post<ApiResponse<AuthResponse>>(`${this.api}/login`, credenciales)
+      .pipe(
+        map((res) => res.data),
+        tap((data) => {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('usuario', JSON.stringify(data.usuario));
+        })
+      );
   }
 
   logout(): void {
@@ -30,17 +39,34 @@ export class Auth {
     localStorage.removeItem('usuario');
   }
 
-  isAuthenticated(): boolean {
-    return !!localStorage.getItem('token');
-  }
-
   getToken(): string | null {
     return localStorage.getItem('token');
   }
 
-  getUsuarioActual(): any {
-  const userStr = localStorage.getItem('usuario');
-  return userStr ? JSON.parse(userStr) : null;
-}
+  getUsuarioActual(): Usuario | null {
+    const raw = localStorage.getItem('usuario');
+    if (!raw || raw === 'undefined') return null;
+    try {
+      return JSON.parse(raw) as Usuario;
+    } catch {
+      localStorage.removeItem('usuario');
+      return null;
+    }
+  }
 
+  isAuthenticated(): boolean {
+    const token = this.getToken();
+    if (!token || token === 'undefined') return false;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        this.logout();
+        return false;
+      }
+      return true;
+    } catch {
+      this.logout();
+      return false;
+    }
+  }
 }

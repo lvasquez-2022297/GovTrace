@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { UsuariosService, Usuario } from '../../core/services/usuarios.service';
+import { UsuariosService } from '../../core/services/usuarios.service';
+import { Auth } from '../../core/services/auth.service';
+import { RolUsuario, Usuario } from '../../core/models/usuario.model';
 
 @Component({
   selector: 'app-usuarios',
@@ -11,70 +13,66 @@ import { UsuariosService, Usuario } from '../../core/services/usuarios.service';
   styleUrl: './usuarios.component.css'
 })
 export class Usuarios implements OnInit {
-  usuarios: Usuario[] = [
-    {
-      id: 1,
-      nombre: 'Luis Vásquez',
-      email: 'lvasquez@govtrace.gob.gt',
-      rol: 'ADMINISTRADOR',
-      departamento: 'Dirección de Tecnología',
-      estado: 'ACTIVO',
-      ultimoAcceso: '2026-10-03 18:45'
-    },
-    {
-      id: 2,
-      nombre: 'Carlos Mendoza',
-      email: 'cmendoza@contraloria.gob.gt',
-      rol: 'AUDITOR',
-      departamento: 'Unidad de Fiscalización',
-      estado: 'ACTIVO',
-      ultimoAcceso: '2026-10-03 14:12'
-    },
-    {
-      id: 3,
-      nombre: 'Sofía Arriola',
-      email: 'sarriola@minfin.gob.gt',
-      rol: 'ANALISTA',
-      departamento: 'Transparencia Fiscal',
-      estado: 'ACTIVO',
-      ultimoAcceso: '2026-10-02 09:30'
-    },
-    {
-      id: 4,
-      nombre: 'Jorge Ramírez',
-      email: 'jramirez@gmail.com',
-      rol: 'CIUDADANO',
-      departamento: 'Monitoreo Ciudadano',
-      estado: 'INACTIVO',
-      ultimoAcceso: '2026-09-15 11:05'
-    }
-  ];
+  usuarios: Usuario[] = [];
+  cargando = true;
+  errorMensaje = '';
 
-  searchTerm: string = '';
-  rolFiltro: string = 'TODOS';
+  busqueda = '';
+  filtroRol: RolUsuario | 'TODOS' = 'TODOS';
 
-  constructor(private usuariosService: UsuariosService) {}
+  esAdmin = false;
+  miId: number | null = null;
+
+  constructor(
+    private usuariosService: UsuariosService,
+    private authService: Auth
+  ) {}
 
   ngOnInit(): void {
+    const actual = this.authService.getUsuarioActual();
+    this.esAdmin = actual?.rol === 'ADMIN';
+    this.miId = actual?.id ?? null;
+    this.cargar();
+  }
+
+  cargar(): void {
+    this.cargando = true;
+    this.errorMensaje = '';
+
     this.usuariosService.getAll().subscribe({
-      next: (data: Usuario[]) => {
-        if (data && data.length > 0) {
-          this.usuarios = data;
-        }
+      next: (data) => {
+        this.usuarios = data;
+        this.cargando = false;
       },
-      error: (err: unknown) => console.warn('Cargando usuarios de prueba:', err)
+      error: (err) => {
+        this.errorMensaje = err.error?.message || 'No se pudo cargar la lista de usuarios.';
+        this.cargando = false;
+      }
     });
   }
 
   get usuariosFiltrados(): Usuario[] {
-    return this.usuarios.filter(item => {
-      const coincideTexto = item.nombre.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                            item.email.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                            item.departamento.toLowerCase().includes(this.searchTerm.toLowerCase());
+    const texto = this.busqueda.trim().toLowerCase();
+    return this.usuarios.filter((u) => {
+      const coincideRol = this.filtroRol === 'TODOS' || u.rol === this.filtroRol;
+      const coincideTexto =
+        !texto ||
+        u.nombre.toLowerCase().includes(texto) ||
+        u.email.toLowerCase().includes(texto);
+      return coincideRol && coincideTexto;
+    });
+  }
 
-      const coincideRol = this.rolFiltro === 'TODOS' || item.rol === this.rolFiltro;
+  eliminar(usuario: Usuario): void {
+    if (!confirm(`¿Eliminar a ${usuario.nombre}? Esta acción no se puede deshacer.`)) return;
 
-      return coincideTexto && coincideRol;
+    this.usuariosService.eliminar(usuario.id).subscribe({
+      next: () => {
+        this.usuarios = this.usuarios.filter((u) => u.id !== usuario.id);
+      },
+      error: (err) => {
+        this.errorMensaje = err.error?.message || 'No se pudo eliminar el usuario.';
+      }
     });
   }
 }

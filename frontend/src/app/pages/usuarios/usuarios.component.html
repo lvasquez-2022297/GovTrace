@@ -1,73 +1,71 @@
-<div class="page-container">
-  <div class="page-header">
-    <div>
-      <h1>Gestión de Usuarios</h1>
-      <p>Administración de roles, permisos y accesos al sistema GovTrace.</p>
-    </div>
+<div class="usuarios-page">
+  <header class="page-header">
+    <h1>Gestión de Usuarios</h1>
+    <p>Usuarios registrados en la plataforma GovTrace.</p>
+  </header>
+
+  <div class="toolbar">
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Buscar por nombre o correo..."
+      [(ngModel)]="busqueda"
+    />
+
+    <select class="role-select" [(ngModel)]="filtroRol">
+      <option value="TODOS">Todos los roles</option>
+      <option value="ADMIN">Administrador</option>
+      <option value="AUDITOR">Auditor</option>
+      <option value="CIUDADANO">Ciudadano</option>
+    </select>
   </div>
 
-  <div class="search-bar-card">
-    <div class="search-input-wrapper">
-      <input 
-        type="text" 
-        placeholder="Buscar por nombre, correo o departamento..." 
-        [(ngModel)]="searchTerm" 
-        class="search-input"
-      />
-    </div>
+  <p *ngIf="errorMensaje" class="error-banner">{{ errorMensaje }}</p>
+  <p *ngIf="cargando" class="estado-carga">Cargando usuarios...</p>
 
-    <div class="filter-group">
-      <label>Rol:</label>
-      <select [(ngModel)]="rolFiltro" class="select-filter">
-        <option value="TODOS">Todos los roles</option>
-        <option value="ADMINISTRADOR">Administrador</option>
-        <option value="AUDITOR">Auditor</option>
-        <option value="ANALISTA">Analista</option>
-        <option value="CIUDADANO">Ciudadano</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="table-card">
-    <table class="data-table">
+  <div class="table-card" *ngIf="!cargando">
+    <table class="usuarios-table">
       <thead>
         <tr>
-          <th>USUARIO</th>
-          <th>CORREO ELECTRÓNICO</th>
+          <th>NOMBRE</th>
+          <th>CORREO</th>
           <th>ROL</th>
-          <th>DEPARTAMENTO</th>
-          <th>ESTADO</th>
-          <th>ÚLTIMO ACCESO</th>
+          <th>FECHA DE REGISTRO</th>
+          <th *ngIf="esAdmin" class="text-right">ACCIONES</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let item of usuariosFiltrados">
-          <td class="title-cell">{{ item.nombre }}</td>
-          <td class="font-mono">{{ item.email }}</td>
+        <tr *ngFor="let usuario of usuariosFiltrados">
+          <td><strong>{{ usuario.nombre }}</strong></td>
+          <td>{{ usuario.email }}</td>
           <td>
-            <span class="role-badge" [ngClass]="{
-              'role-admin': item.rol === 'ADMINISTRADOR',
-              'role-auditor': item.rol === 'AUDITOR',
-              'role-analyst': item.rol === 'ANALISTA',
-              'role-user': item.rol === 'CIUDADANO'
-            }">
-              {{ item.rol }}
+            <span
+              class="badge"
+              [ngClass]="{
+                'badge-admin': usuario.rol === 'ADMIN',
+                'badge-auditor': usuario.rol === 'AUDITOR',
+                'badge-ciudadano': usuario.rol === 'CIUDADANO'
+              }"
+            >
+              {{ usuario.rol }}
             </span>
           </td>
-          <td>{{ item.departamento }}</td>
-          <td>
-            <span class="status-badge" [ngClass]="{
-              'badge-success': item.estado === 'ACTIVO',
-              'badge-warning': item.estado === 'INACTIVO',
-              'badge-danger': item.estado === 'BLOQUEADO'
-            }">
-              {{ item.estado }}
-            </span>
+          <td>{{ usuario.creado_en | date:'dd/MM/yyyy' }}</td>
+          <td *ngIf="esAdmin" class="text-right">
+            <button
+              class="btn-delete"
+              [disabled]="usuario.id === miId"
+              (click)="eliminar(usuario)"
+            >
+              Eliminar
+            </button>
           </td>
-          <td class="text-muted">{{ item.ultimoAcceso }}</td>
         </tr>
+
         <tr *ngIf="usuariosFiltrados.length === 0">
-          <td colspan="6" class="no-data">No se encontraron usuarios coincidentes.</td>
+          <td [attr.colspan]="esAdmin ? 5 : 4" class="sin-resultados">
+            No se encontraron usuarios.
+          </td>
         </tr>
       </tbody>
     </table>

@@ -6,13 +6,12 @@
     </div>
   </div>
 
-  <!-- Filtros y Buscador -->
   <div class="search-bar-card">
     <div class="search-input-wrapper">
-      <input 
-        type="text" 
-        placeholder="Buscar por NOG, título o institución..." 
-        [(ngModel)]="searchTerm" 
+      <input
+        type="text"
+        placeholder="Buscar por código, título o institución..."
+        [(ngModel)]="searchTerm"
         class="search-input"
       />
     </div>
@@ -21,42 +20,46 @@
       <label>Estado:</label>
       <select [(ngModel)]="estadoFiltro" class="select-filter">
         <option value="TODOS">Todos los estados</option>
-        <option value="EN_PROCESO">En Proceso</option>
+        <option value="PUBLICADA">Publicada</option>
         <option value="ADJUDICADA">Adjudicada</option>
-        <option value="ALERTA">Con Alerta 🔴</option>
+        <option value="CON_ALERTA">Con Alerta 🔴</option>
+        <option value="CANCELADA">Cancelada</option>
       </select>
     </div>
   </div>
 
-  <!-- Tabla de Licitaciones -->
-  <div class="table-card">
+  <p *ngIf="errorMensaje" class="error-banner">{{ errorMensaje }}</p>
+  <p *ngIf="cargando" class="estado-carga">Cargando licitaciones...</p>
+
+  <div class="table-card" *ngIf="!cargando">
     <table class="data-table">
       <thead>
         <tr>
-          <th>NOG</th>
+          <th>CÓDIGO</th>
           <th>TÍTULO / DESCRIPCIÓN</th>
           <th>INSTITUCIÓN</th>
-          <th class="text-right">MONTO EST.</th>
+          <th class="text-right">PRESUPUESTO</th>
           <th>ESTADO</th>
-          <th>FECHA</th>
+          <th>FECHA INICIO</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of licitacionesFiltradas">
-          <td class="font-mono"><strong>{{ item.noNog }}</strong></td>
+          <td class="font-mono"><strong>{{ item.codigo_licitacion }}</strong></td>
           <td class="title-cell">{{ item.titulo }}</td>
-          <td>{{ item.entidad }}</td>
-          <td class="text-right font-bold">Q{{ item.montoEstimado | number:'1.2-2' }}</td>
+          <td>{{ item.entidad || 'Sin entidad' }}</td>
+          <td class="text-right font-bold">Q{{ +item.presupuesto_asignado | number:'1.2-2' }}</td>
           <td>
             <span class="status-badge" [ngClass]="{
-              'badge-process': item.estado === 'EN_PROCESO',
+              'badge-process': item.estado === 'PUBLICADA',
               'badge-success': item.estado === 'ADJUDICADA',
-              'badge-danger': item.estado === 'ALERTA'
+              'badge-danger': item.estado === 'CON_ALERTA',
+              'badge-muted': item.estado === 'CANCELADA'
             }">
               {{ item.estado }}
             </span>
           </td>
-          <td class="text-muted">{{ item.fechaPublicacion }}</td>
+          <td class="text-muted">{{ item.fecha_inicio | date:'dd/MM/yyyy' }}</td>
         </tr>
         <tr *ngIf="licitacionesFiltradas.length === 0">
           <td colspan="6" class="no-data">No se encontraron licitaciones con los criterios de búsqueda.</td>

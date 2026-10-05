@@ -1,20 +1,20 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
 export class Register {
   registerForm: FormGroup;
-  errorMessage: string = '';
-  loading: boolean = false;
+  errorMessage = '';
+  loading = false;
 
   constructor(
     private fb: FormBuilder,
@@ -22,10 +22,13 @@ export class Register {
     private router: Router
   ) {
     this.registerForm = this.fb.group({
-      nombre: ['', [Validators.required]],
+      nombre: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      rol: ['CIUDADANO', [Validators.required]]
+      password: ['', [
+        Validators.required,
+        Validators.minLength(6),
+        Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d).+$/)
+      ]]
     });
   }
 
@@ -38,7 +41,9 @@ export class Register {
     this.loading = true;
     this.errorMessage = '';
 
-    this.authService.register(this.registerForm.value).subscribe({
+    const { nombre, email, password } = this.registerForm.value;
+
+    this.authService.register({ nombre, email, password }).subscribe({
       next: () => {
         this.loading = false;
         this.router.navigate(['/login']);

@@ -47,6 +47,7 @@
   </section>
 
   <section class="metrics-container">
+    <p *ngIf="errorMensaje" class="error-banner">{{ errorMensaje }}</p>
     <div class="metrics-grid">
       <div class="metric-card">
         <span class="metric-label">Total Presupuestado</span>
