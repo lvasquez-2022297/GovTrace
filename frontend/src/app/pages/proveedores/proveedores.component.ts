@@ -11,70 +11,50 @@ import { ProveedoresService, Proveedor } from '../../core/services/proveedores.s
   styleUrl: './proveedores.component.css'
 })
 export class Proveedores implements OnInit {
-  proveedores: Proveedor[] = [
-    {
-      id: 1,
-      nit: '984123-0',
-      nombre: 'Constructora del Sur, S.A.',
-      representanteLegal: 'Carlos Alberto Morales',
-      estado: 'ACTIVO',
-      contratosAdjudicados: 12,
-      montoTotalContratado: 14500000
-    },
-    {
-      id: 2,
-      nit: '451928-1',
-      nombre: 'Farmacéutica Global de Guatemala',
-      representanteLegal: 'María Inés Estrada',
-      estado: 'BAJO_INVESTIGACION',
-      contratosAdjudicados: 5,
-      montoTotalContratado: 8900000
-    },
-    {
-      id: 3,
-      nit: '331092-K',
-      nombre: 'Tecnología Avanzada S.A.',
-      representanteLegal: 'Roberto Gómez',
-      estado: 'ACTIVO',
-      contratosAdjudicados: 8,
-      montoTotalContratado: 3200000
-    },
-    {
-      id: 4,
-      nit: '110293-8',
-      nombre: 'Suministros Médicos S.A.',
-      representanteLegal: 'Ana Lucía Méndez',
-      estado: 'SUSPENDIDO',
-      contratosAdjudicados: 2,
-      montoTotalContratado: 750000
-    }
-  ];
+  proveedores: Proveedor[] = [];
+  cargando = true;
+  errorMensaje = '';
 
-  searchTerm: string = '';
-  estadoFiltro: string = 'TODOS';
+  searchTerm = '';
+  calificacionFiltro = 'TODAS';
 
   constructor(private proveedoresService: ProveedoresService) {}
 
   ngOnInit(): void {
     this.proveedoresService.getAll().subscribe({
-      next: (data: Proveedor[]) => {
-        if (data && data.length > 0) {
-          this.proveedores = data;
-        }
+      next: (data) => {
+        this.proveedores = data;
+        this.cargando = false;
       },
-      error: (err: unknown) => console.warn('Cargando proveedores de prueba:', err)
+      error: (err) => {
+        console.error('Error cargando proveedores:', err);
+        this.errorMensaje = 'No se pudieron cargar los proveedores. Intenta de nuevo más tarde.';
+        this.cargando = false;
+      }
     });
   }
 
+  private nivel(calificacion: number): 'ALTA' | 'MEDIA' | 'BAJA' {
+    if (calificacion >= 4) return 'ALTA';
+    if (calificacion >= 2.5) return 'MEDIA';
+    return 'BAJA';
+  }
+
   get proveedoresFiltrados(): Proveedor[] {
-    return this.proveedores.filter(item => {
-      const coincideTexto = item.nombre.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                            item.nit.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                            item.representanteLegal.toLowerCase().includes(this.searchTerm.toLowerCase());
+    const texto = this.searchTerm.trim().toLowerCase();
 
-      const coincideEstado = this.estadoFiltro === 'TODOS' || item.estado === this.estadoFiltro;
+    return this.proveedores.filter((item) => {
+      const coincideTexto =
+        !texto ||
+        item.nombre.toLowerCase().includes(texto) ||
+        item.nit.toLowerCase().includes(texto) ||
+        item.email.toLowerCase().includes(texto);
 
-      return coincideTexto && coincideEstado;
+      const coincideCalificacion =
+        this.calificacionFiltro === 'TODAS' ||
+        this.nivel(item.calificacion) === this.calificacionFiltro;
+
+      return coincideTexto && coincideCalificacion;
     });
   }
 }

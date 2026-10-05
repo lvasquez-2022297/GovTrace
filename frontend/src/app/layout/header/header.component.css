@@ -1,51 +1,95 @@
 .main-header {
-  background-color: #1b2a4a;
-  color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.8rem 2rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  gap: 24px;
+  padding: 0 32px;
+  min-height: 64px;
+  background: #1b2a4a;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .logo a {
-  color: #ffffff;
+  color: #fff;
   text-decoration: none;
-  font-size: 1.4rem;
-  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: 0.3px;
+}
+.logo a strong { color: #10b981; }
+
+.header-collapse {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  gap: 24px;
 }
 
 .nav-menu {
   display: flex;
-  gap: 1.25rem;
+  align-items: center;
+  gap: 4px;
 }
-
 .nav-menu a {
   color: #cbd5e1;
   text-decoration: none;
-  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: background 0.2s, color 0.2s;
+}
+.nav-menu a:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.nav-menu a.active { background: rgba(16, 185, 129, 0.18); color: #10b981; font-weight: 600; }
+
+.user-actions { display: flex; align-items: center; gap: 12px; }
+
+.user-info { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
+.user-name { font-size: 0.9rem; font-weight: 600; }
+.user-role { font-size: 0.7rem; color: #94a3b8; letter-spacing: 0.5px; }
+
+.btn-logout,
+.btn-login,
+.btn-register {
+  padding: 8px 16px;
+  border-radius: 8px;
   font-size: 0.9rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  transition: all 0.2s;
-}
-
-.nav-menu a:hover,
-.nav-menu a.active {
-  color: #ffffff;
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.btn-logout {
-  background-color: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #ffffff;
-  padding: 0.4rem 1rem;
-  border-radius: 50px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-logout { background: transparent; color: #fca5a5; border: 1px solid #fca5a5; }
+.btn-logout:hover { background: #dc2626; border-color: #dc2626; color: #fff; }
+
+.btn-login { color: #fff; border: 1px solid rgba(255, 255, 255, 0.4); }
+.btn-login:hover { background: rgba(255, 255, 255, 0.1); }
+.btn-register { background: #10b981; color: #fff; border: 1px solid #10b981; }
+.btn-register:hover { background: #059669; border-color: #059669; }
+
+.menu-toggle {
+  display: none;
+  background: transparent;
+  border: 0;
+  color: #fff;
+  font-size: 1.6rem;
+  cursor: pointer;
 }
 
-.btn-logout:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-} 
+@media (max-width: 900px) {
+  .main-header { flex-wrap: wrap; padding: 8px 16px; }
+  .menu-toggle { display: block; }
+  .header-collapse {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    padding-bottom: 12px;
+  }
+  .header-collapse.open { display: flex; }
+  .nav-menu { flex-direction: column; align-items: stretch; }
+  .user-actions { justify-content: space-between; }
+}

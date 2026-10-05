@@ -11,62 +11,42 @@ import { AlertasService, Alerta } from '../../core/services/alertas.service';
   styleUrl: './alertas.component.css'
 })
 export class Alertas implements OnInit {
-  alertas: Alerta[] = [
-    {
-      id: 1,
-      nog: 'NOG-9981234',
-      tituloLicitacion: 'Mantenimiento Red Vial Ruta Interamericana',
-      entidad: 'Ministerio de Comunicaciones',
-      tipoAlerta: 'SOBREPRECIO',
-      nivelRiesgo: 'ALTO',
-      desviacionPorcentaje: 45.8,
-      fechaDeteccion: '2026-09-18'
-    },
-    {
-      id: 2,
-      nog: 'NOG-4410293',
-      tituloLicitacion: 'Suministro de Trajes Quirúrgicos',
-      entidad: 'Ministerio de Salud Pública',
-      tipoAlerta: 'PROVEEDOR_UNICO',
-      nivelRiesgo: 'MEDIO',
-      desviacionPorcentaje: 18.2,
-      fechaDeteccion: '2026-09-20'
-    },
-    {
-      id: 3,
-      nog: 'NOG-8812039',
-      tituloLicitacion: 'Compra Directa de Papelería Institucional',
-      entidad: 'Ministerio de Economía',
-      tipoAlerta: 'FRACCIONAMIENTO',
-      nivelRiesgo: 'ALTO',
-      desviacionPorcentaje: 62.0,
-      fechaDeteccion: '2026-09-22'
-    }
-  ];
+  alertas: Alerta[] = [];
+  cargando = true;
+  errorMensaje = '';
 
-  searchTerm: string = '';
-  riesgoFiltro: string = 'TODOS';
+  searchTerm = '';
+  riesgoFiltro = 'TODOS';
 
   constructor(private alertasService: AlertasService) {}
 
   ngOnInit(): void {
     this.alertasService.getAll().subscribe({
-      next: (data: Alerta[]) => {
-        if (data && data.length > 0) {
-          this.alertas = data;
-        }
+      next: (data) => {
+        this.alertas = data;
+        this.cargando = false;
       },
-      error: (err: unknown) => console.warn('Cargando alertas de prueba:', err)
+      error: (err) => {
+        console.error('Error cargando alertas:', err);
+        this.errorMensaje = 'No se pudieron cargar las alertas. Intenta de nuevo más tarde.';
+        this.cargando = false;
+      }
     });
   }
 
   get alertasFiltradas(): Alerta[] {
-    return this.alertas.filter(item => {
-      const coincideTexto = (item.tituloLicitacion || '').toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                            item.nog.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                            item.entidad.toLowerCase().includes(this.searchTerm.toLowerCase());
+    const texto = this.searchTerm.trim().toLowerCase();
 
-      const coincideRiesgo = this.riesgoFiltro === 'TODOS' || item.nivelRiesgo === this.riesgoFiltro;
+    return this.alertas.filter((item) => {
+      const coincideTexto =
+        !texto ||
+        item.tituloLicitacion.toLowerCase().includes(texto) ||
+        item.nog.toLowerCase().includes(texto) ||
+        item.entidad.toLowerCase().includes(texto) ||
+        item.descripcion.toLowerCase().includes(texto);
+
+      const coincideRiesgo =
+        this.riesgoFiltro === 'TODOS' || item.nivelRiesgo === this.riesgoFiltro;
 
       return coincideTexto && coincideRiesgo;
     });

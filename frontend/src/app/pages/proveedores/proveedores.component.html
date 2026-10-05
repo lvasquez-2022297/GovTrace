@@ -2,57 +2,60 @@
   <div class="page-header">
     <div>
       <h1>Directorio de Proveedores</h1>
-      <p>Consulta el historial, estado de cumplimiento y adjudicaciones de las empresas contratistas del Estado.</p>
+      <p>Consulta la calificación y las adjudicaciones de las empresas contratistas del Estado.</p>
     </div>
   </div>
 
   <div class="search-bar-card">
     <div class="search-input-wrapper">
-      <input 
-        type="text" 
-        placeholder="Buscar por NIT, nombre comercial o representante..." 
-        [(ngModel)]="searchTerm" 
+      <input
+        type="text"
+        placeholder="Buscar por NIT, razón social o correo..."
+        [(ngModel)]="searchTerm"
         class="search-input"
       />
     </div>
 
     <div class="filter-group">
-      <label>Estado:</label>
-      <select [(ngModel)]="estadoFiltro" class="select-filter">
-        <option value="TODOS">Todos los estados</option>
-        <option value="ACTIVO">Activos</option>
-        <option value="BAJO_INVESTIGACION">Bajo Investigación ⚠️</option>
-        <option value="SUSPENDIDO">Suspendidos 🚫</option>
+      <label>Calificación:</label>
+      <select [(ngModel)]="calificacionFiltro" class="select-filter">
+        <option value="TODAS">Todas</option>
+        <option value="ALTA">Alta (4.0 o más) 🟢</option>
+        <option value="MEDIA">Media (2.5 a 3.9) 🟡</option>
+        <option value="BAJA">Baja (menos de 2.5) 🔴</option>
       </select>
     </div>
   </div>
 
-  <div class="table-card">
+  <p *ngIf="errorMensaje" class="error-banner">{{ errorMensaje }}</p>
+  <p *ngIf="cargando" class="estado-carga">Cargando proveedores...</p>
+
+  <div class="table-card" *ngIf="!cargando">
     <table class="data-table">
       <thead>
         <tr>
           <th>NIT</th>
-          <th>NOMBRE COMERCIAL</th>
-          <th>REPRESENTANTE LEGAL</th>
+          <th>RAZÓN SOCIAL</th>
+          <th>CORREO</th>
           <th class="text-center">CONTRATOS</th>
           <th class="text-right">TOTAL CONTRATADO</th>
-          <th>ESTADO</th>
+          <th>CALIFICACIÓN</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of proveedoresFiltrados">
           <td class="font-mono"><strong>{{ item.nit }}</strong></td>
           <td class="title-cell">{{ item.nombre }}</td>
-          <td>{{ item.representanteLegal }}</td>
+          <td>{{ item.email }}</td>
           <td class="text-center font-bold">{{ item.contratosAdjudicados }}</td>
           <td class="text-right font-bold">Q{{ item.montoTotalContratado | number:'1.2-2' }}</td>
           <td>
             <span class="status-badge" [ngClass]="{
-              'badge-success': item.estado === 'ACTIVO',
-              'badge-warning': item.estado === 'BAJO_INVESTIGACION',
-              'badge-danger': item.estado === 'SUSPENDIDO'
+              'badge-success': item.calificacion >= 4,
+              'badge-warning': item.calificacion >= 2.5 && item.calificacion < 4,
+              'badge-danger': item.calificacion < 2.5
             }">
-              {{ item.estado.replace('_', ' ') }}
+              {{ item.calificacion | number:'1.1-2' }} / 5
             </span>
           </td>
         </tr>

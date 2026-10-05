@@ -1,59 +1,67 @@
-<div class="usuarios-page">
-  <header class="page-header">
-    <h1>Gestión de Usuarios</h1>
-    <p>Usuarios registrados en la plataforma GovTrace.</p>
-  </header>
-
-  <div class="toolbar">
-    <input
-      type="text"
-      class="search-input"
-      placeholder="Buscar por nombre o correo..."
-      [(ngModel)]="busqueda"
-    />
-
-    <select class="role-select" [(ngModel)]="filtroRol">
-      <option value="TODOS">Todos los roles</option>
-      <option value="ADMIN">Administrador</option>
-      <option value="AUDITOR">Auditor</option>
-      <option value="CIUDADANO">Ciudadano</option>
-    </select>
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Gestión de Usuarios</h1>
+      <p>Usuarios registrados en la plataforma GovTrace.</p>
+    </div>
   </div>
 
-  <p *ngIf="errorMensaje" class="error-banner">{{ errorMensaje }}</p>
-  <p *ngIf="cargando" class="estado-carga">Cargando usuarios...</p>
+  <div class="search-bar-card">
+    <div class="search-input-wrapper">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Buscar por nombre o correo..."
+        [(ngModel)]="busqueda"
+      />
+    </div>
+
+    <div class="filter-group">
+      <label>Rol:</label>
+      <select class="select-filter" [(ngModel)]="filtroRol">
+        <option value="TODOS">Todos los roles</option>
+        <option value="ADMIN">Administrador</option>
+        <option value="AUDITOR">Auditor</option>
+        <option value="CIUDADANO">Ciudadano</option>
+      </select>
+    </div>
+  </div>
+
+  <p *ngIf="errorMensaje" class="no-data">{{ errorMensaje }}</p>
+  <p *ngIf="cargando" class="no-data">Cargando usuarios...</p>
 
   <div class="table-card" *ngIf="!cargando">
-    <table class="usuarios-table">
+    <table class="data-table">
       <thead>
         <tr>
           <th>NOMBRE</th>
           <th>CORREO</th>
           <th>ROL</th>
           <th>FECHA DE REGISTRO</th>
-          <th *ngIf="esAdmin" class="text-right">ACCIONES</th>
+          <th *ngIf="esAdmin">ACCIONES</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let usuario of usuariosFiltrados">
-          <td><strong>{{ usuario.nombre }}</strong></td>
+          <td class="title-cell">{{ usuario.nombre }}</td>
           <td>{{ usuario.email }}</td>
           <td>
             <span
-              class="badge"
+              class="role-badge"
               [ngClass]="{
-                'badge-admin': usuario.rol === 'ADMIN',
-                'badge-auditor': usuario.rol === 'AUDITOR',
-                'badge-ciudadano': usuario.rol === 'CIUDADANO'
+                'role-admin': usuario.rol === 'ADMIN',
+                'role-auditor': usuario.rol === 'AUDITOR',
+                'role-user': usuario.rol === 'CIUDADANO'
               }"
             >
               {{ usuario.rol }}
             </span>
           </td>
-          <td>{{ usuario.creado_en | date:'dd/MM/yyyy' }}</td>
-          <td *ngIf="esAdmin" class="text-right">
+          <td class="text-muted">{{ usuario.creado_en | date:'dd/MM/yyyy' }}</td>
+          <td *ngIf="esAdmin">
             <button
-              class="btn-delete"
+              type="button"
+              class="status-badge badge-danger"
               [disabled]="usuario.id === miId"
               (click)="eliminar(usuario)"
             >
@@ -63,7 +71,7 @@
         </tr>
 
         <tr *ngIf="usuariosFiltrados.length === 0">
-          <td [attr.colspan]="esAdmin ? 5 : 4" class="sin-resultados">
+          <td [attr.colspan]="esAdmin ? 5 : 4" class="no-data">
             No se encontraron usuarios.
           </td>
         </tr>

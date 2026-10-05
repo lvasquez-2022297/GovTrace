@@ -1,16 +1,46 @@
-<header class="main-header" *ngIf="authService.isAuthenticated()">
+<header class="main-header">
   <div class="logo">
-    <a routerLink="/dashboard"><strong>GovTrace</strong></a>
+    <a [routerLink]="authService.isAuthenticated() ? '/dashboard' : '/home'" (click)="cerrarMenu()">
+      <strong>GovTrace</strong>
+    </a>
   </div>
-  <nav class="nav-menu">
-    <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
-    <a routerLink="/licitaciones" routerLinkActive="active">Licitaciones</a>
-    <a routerLink="/adjudicaciones" routerLinkActive="active">Adjudicaciones</a>
-    <a routerLink="/proveedores" routerLinkActive="active">Proveedores</a>
-    <a routerLink="/alertas" routerLinkActive="active">Alertas</a>
-    <a routerLink="/usuarios" routerLinkActive="active">Usuarios</a>
-  </nav>
-  <div class="user-actions">
-    <button (click)="onLogout()" class="btn-logout">Cerrar Sesión</button>
+
+  <button
+    class="menu-toggle"
+    type="button"
+    aria-label="Abrir menú"
+    [attr.aria-expanded]="menuAbierto"
+    (click)="toggleMenu()"
+  >
+    ☰
+  </button>
+
+  <div class="header-collapse" [class.open]="menuAbierto">
+    <ng-container *ngIf="authService.isAuthenticated(); else invitado">
+      <nav class="nav-menu">
+        <a routerLink="/dashboard" routerLinkActive="active" (click)="cerrarMenu()">Dashboard</a>
+        <a routerLink="/licitaciones" routerLinkActive="active" (click)="cerrarMenu()">Licitaciones</a>
+        <a routerLink="/adjudicaciones" routerLinkActive="active" (click)="cerrarMenu()">Adjudicaciones</a>
+        <a routerLink="/proveedores" routerLinkActive="active" (click)="cerrarMenu()">Proveedores</a>
+        <a routerLink="/alertas" routerLinkActive="active" (click)="cerrarMenu()">Alertas</a>
+        <a *ngIf="puedeVerUsuarios" routerLink="/usuarios" routerLinkActive="active" (click)="cerrarMenu()">Usuarios</a>
+      </nav>
+
+      <div class="user-actions">
+        <div class="user-info" *ngIf="usuario as u">
+          <span class="user-name">{{ u.nombre }}</span>
+          <span class="user-role">{{ u.rol }}</span>
+        </div>
+        <button type="button" (click)="onLogout()" class="btn-logout">Cerrar Sesión</button>
+      </div>
+    </ng-container>
+
+    <ng-template #invitado>
+      <nav class="nav-menu"></nav>
+      <div class="user-actions">
+        <a routerLink="/login" class="btn-login" (click)="cerrarMenu()">Iniciar Sesión</a>
+        <a routerLink="/register" class="btn-register" (click)="cerrarMenu()">Registrarse</a>
+      </div>
+    </ng-template>
   </div>
 </header>
