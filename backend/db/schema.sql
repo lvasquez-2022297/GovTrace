@@ -27,6 +27,7 @@ create table licitaciones (
     codigo_licitacion varchar(50) unique not null,
     titulo varchar(200) not null,
     descripcion text,
+    entidad varchar(150),
     presupuesto_asignado decimal(12,2) not null check (presupuesto_asignado > 0),
     estado varchar(30) default 'PUBLICADA' check (estado in ('PUBLICADA', 'ADJUDICADA', 'CANCELADA', 'CON_ALERTA')),
     fecha_inicio date not null,
