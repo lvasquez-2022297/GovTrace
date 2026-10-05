@@ -1,14 +1,21 @@
 import { pool } from '../db';
 import { Usuario } from '../models/Usuarios';
 
+export type UsuarioSinPassword = Omit<Usuario, 'password'>;
+
 export class UsuariosRepository {
-  async obtenerTodos(): Promise<Usuario[]> {
-    const res = await pool.query('SELECT * FROM usuarios ORDER BY id ASC');
+  async obtenerTodos(): Promise<UsuarioSinPassword[]> {
+    const res = await pool.query(
+      'SELECT id, nombre, email, rol, creado_en FROM usuarios ORDER BY id ASC'
+    );
     return res.rows;
   }
 
-  async obtenerPorId(id: number): Promise<Usuario | null> {
-    const res = await pool.query('SELECT * FROM usuarios WHERE id = $1', [id]);
+  async obtenerPorId(id: number): Promise<UsuarioSinPassword | null> {
+    const res = await pool.query(
+      'SELECT id, nombre, email, rol, creado_en FROM usuarios WHERE id = $1',
+      [id]
+    );
     return res.rows[0] || null;
   }
 
@@ -17,7 +24,7 @@ export class UsuariosRepository {
     return res.rows[0] || null;
   }
 
-  async crear(usuario: Omit<Usuario, 'id' | 'creado_en'>): Promise<Usuario> {
+  async crear(usuario: Omit<Usuario, 'id' | 'creado_en'>): Promise<UsuarioSinPassword> {
     const res = await pool.query(
       `INSERT INTO usuarios (nombre, email, password, rol)
        VALUES ($1, $2, $3, $4)
@@ -27,15 +34,18 @@ export class UsuariosRepository {
     return res.rows[0];
   }
 
-  async actualizar(id: number, usuario: Partial<Usuario>): Promise<Usuario | null> {
+  async actualizar(
+    id: number,
+    cambios: Partial<Pick<Usuario, 'nombre' | 'email' | 'password'>>
+  ): Promise<UsuarioSinPassword | null> {
     const res = await pool.query(
-      `UPDATE usuarios 
-       SET nombre = COALESCE($1, nombre),
-           email = COALESCE($2, email),
-           rol = COALESCE($3, rol)
+      `UPDATE usuarios
+       SET nombre   = COALESCE($1, nombre),
+           email    = COALESCE($2, email),
+           password = COALESCE($3, password)
        WHERE id = $4
        RETURNING id, nombre, email, rol, creado_en`,
-      [usuario.nombre, usuario.email, usuario.rol, id]
+      [cambios.nombre ?? null, cambios.email ?? null, cambios.password ?? null, id]
     );
     return res.rows[0] || null;
   }

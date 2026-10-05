@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
-import { LoggerUtils } from '../utils/LoggerUtils';
+import { AppError } from '../utils/AppError';
 
-export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
-  LoggerUtils.error(`[${req.method}] ${req.url} - ${err.message}`, err);
+export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction): void => {
+  const status = err instanceof AppError ? err.statusCode : 500;
 
-  const statusCode = err.statusCode || 400;
-  return res.status(statusCode).json({
+  if (status === 500) console.error(err);
+
+  res.status(status).json({
     success: false,
-    error: err.message || 'Error interno del servidor',
+    message: status === 500 ? 'Error interno del servidor' : err.message,
   });
 };

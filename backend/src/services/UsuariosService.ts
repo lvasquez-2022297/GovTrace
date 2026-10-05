@@ -1,8 +1,27 @@
-import { UsuariosRepository } from '../data/UsuariosRepository';
+import { UsuariosRepository, UsuarioSinPassword } from '../data/UsuariosRepository';
 import { Usuario } from '../models/Usuarios';
 import { CryptoUtils } from '../utils/CryptoUtils';
+import { JwtUtils } from '../utils/JwtUtils';
+import { AppError } from '../utils/AppError';
 
 export type CreacionUsuario = Omit<Usuario, 'id' | 'creado_en'>;
+export type UsuarioPublico = UsuarioSinPassword;
+
+export interface RegistroDTO {
+  nombre: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginDTO {
+  email: string;
+  password: string;
+}
+
+export interface LoginResultado {
+  token: string;
+  usuario: UsuarioPublico;
+}
 
 export class UsuariosService {
   private repo = new UsuariosRepository();
@@ -12,59 +31,120 @@ export class UsuariosService {
     return regex.test(email);
   }
 
-  async listarUsuarios(): Promise<Usuario[]> {
+  private sanitizar(usuario: Usuario): UsuarioPublico {
+    const { password, ...resto } = usuario;
+    return resto;
+  }
+
+  private validarPassword(password: string): void {
+    if (!password || password.length < 6) {
+      throw new AppError('La contraseña debe tener una longitud mínima de 6 caracteres.', 400);
+    }
+    if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+      throw new AppError('La contraseña debe contener al menos una letra y un número.', 400);
+    }
+  }
+
+  async listarUsuarios(): Promise<UsuarioPublico[]> {
     return await this.repo.obtenerTodos();
   }
 
-  async obtenerUsuarioPorId(id: number): Promise<Usuario> {
+  async obtenerUsuarioPorId(id: number): Promise<UsuarioPublico> {
     const usuario = await this.repo.obtenerPorId(id);
-    if (!usuario) throw new Error(`Usuario con ID ${id} no encontrado.`);
+    if (!usuario) throw new AppError(`Usuario con ID ${id} no encontrado.`, 404);
     return usuario;
   }
 
-  async registrarUsuario(usuario: CreacionUsuario): Promise<Usuario> {
-    if (!this.validarFormatoEmail(usuario.email)) {
-      throw new Error(`El formato del correo '${usuario.email}' es inválido. Debe contener '@' y un dominio válido.`);
+  async registrarUsuario(datos: RegistroDTO): Promise<UsuarioPublico> {
+    const nombre = datos.nombre?.trim();
+    const email = datos.email?.trim().toLowerCase();
+
+    if (!email || !this.validarFormatoEmail(email)) {
+      throw new AppError(`El formato del correo '${datos.email ?? ''}' es inválido.`, 400);
     }
-
-    if (!usuario.nombre || usuario.nombre.trim().length < 3) {
-      throw new Error('El nombre de usuario debe tener al menos 3 caracteres.');
+    if (!nombre || nombre.length < 3) {
+      throw new AppError('El nombre debe tener al menos 3 caracteres.', 400);
     }
+    this.validarPassword(datos.password);
 
-    if (!usuario.password || usuario.password.length < 6) {
-      throw new Error('La contraseña debe tener una longitud mínima de 6 caracteres.');
-    }
+    const existe = await this.repo.obtenerPorEmail(email);
+    if (existe) throw new AppError(`El correo ${email} ya se encuentra registrado.`, 409);
 
-    const existe = await this.repo.obtenerPorEmail(usuario.email);
-    if (existe) throw new Error(`El correo ${usuario.email} ya se encuentra registrado.`);
-
-    const passwordHasheada = await CryptoUtils.hashPassword(usuario.password);
+    const passwordHasheada = await CryptoUtils.hashPassword(datos.password);
 
     const nuevoUsuario: CreacionUsuario = {
-      ...usuario,
+      nombre,
+      email,
       password: passwordHasheada,
+      rol: 'CIUDADANO',
     };
 
     return await this.repo.crear(nuevoUsuario);
   }
 
-  async actualizarUsuario(id: number, usuario: Partial<Usuario>): Promise<Usuario> {
-    if (usuario.email && !this.validarFormatoEmail(usuario.email)) {
-      throw new Error(`El formato del correo '${usuario.email}' es inválido.`);
+  async login({ email, password }: LoginDTO): Promise<LoginResultado> {
+    if (!email || !password) {
+      throw new AppError('Correo y contraseña son obligatorios.', 400);
     }
 
-    if (usuario.password) {
-      usuario.password = await CryptoUtils.hashPassword(usuario.password);
+    const emailNormalizado = email.trim().toLowerCase();
+    if (!this.validarFormatoEmail(emailNormalizado)) {
+      throw new AppError('El formato del correo es inválido.', 400);
     }
 
-    const actualizado = await this.repo.actualizar(id, usuario);
-    if (!actualizado) throw new Error(`No se pudo actualizar el usuario con ID ${id}.`);
+    const usuario = await this.repo.obtenerPorEmail(emailNormalizado);
+
+    // Mismo mensaje si el correo no existe o la clave es incorrecta
+    const credencialesInvalidas = new AppError('Correo o contraseña incorrectos.', 401);
+    if (!usuario) throw credencialesInvalidas;
+
+    const coincide = await CryptoUtils.comparePassword(password, usuario.password);
+    if (!coincide) throw credencialesInvalidas;
+
+    const token = JwtUtils.generarToken({
+      id: usuario.id,
+      rol: usuario.rol,
+    });
+
+    return { token, usuario: this.sanitizar(usuario) };
+  }
+
+  async actualizarUsuario(id: number, datos: Partial<Usuario>): Promise<UsuarioPublico> {
+    const cambios: { nombre?: string; email?: string; password?: string } = {};
+
+    if (datos.nombre !== undefined) {
+      const nombre = datos.nombre.trim();
+      if (nombre.length < 3) {
+        throw new AppError('El nombre debe tener al menos 3 caracteres.', 400);
+      }
+      cambios.nombre = nombre;
+    }
+
+    if (datos.email !== undefined) {
+      const email = datos.email.trim().toLowerCase();
+      if (!this.validarFormatoEmail(email)) {
+        throw new AppError(`El formato del correo '${email}' es inválido.`, 400);
+      }
+      const existente = await this.repo.obtenerPorEmail(email);
+      if (existente && existente.id !== id) {
+        throw new AppError(`El correo ${email} ya se encuentra registrado.`, 409);
+      }
+      cambios.email = email;
+    }
+
+    if (datos.password !== undefined) {
+      this.validarPassword(datos.password);
+      cambios.password = await CryptoUtils.hashPassword(datos.password);
+    }
+
+    const actualizado = await this.repo.actualizar(id, cambios);
+    if (!actualizado) throw new AppError(`Usuario con ID ${id} no encontrado.`, 404);
     return actualizado;
   }
 
   async eliminarUsuario(id: number): Promise<boolean> {
     const eliminado = await this.repo.eliminar(id);
-    if (!eliminado) throw new Error(`No se pudo eliminar el usuario con ID ${id}.`);
+    if (!eliminado) throw new AppError(`Usuario con ID ${id} no encontrado.`, 404);
     return true;
   }
 }

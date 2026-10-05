@@ -4,7 +4,7 @@ import { ProveedoresService } from '../services/ProveedoresService';
 import { LicitacionesService } from '../services/LicitacionesService';
 import { AdjudicacionesService } from '../services/AdjudicacionesService';
 import { AlertasService } from '../services/AlertasService';
-import { verificarToken } from '../middlewares/auth';
+import { verificarToken, requiereRol, propioOAdmin } from '../middlewares/auth';
 
 const router = Router();
 
@@ -14,19 +14,23 @@ const licitacionesService = new LicitacionesService();
 const adjudicacionesService = new AdjudicacionesService();
 const alertasService = new AlertasService();
 
-router.get('/usuarios', verificarToken, async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json({ success: true, data: await usuariosService.listarUsuarios() }); } catch (e) { next(e); }
-});
-router.get('/usuarios/:id', verificarToken, async (req: Request, res: Response, next: NextFunction) => {
-  try { res.json({ success: true, data: await usuariosService.obtenerUsuarioPorId(Number(req.params.id)) }); } catch (e) { next(e); }
-});
-router.post('/usuarios', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/auth/register', async (req: Request, res: Response, next: NextFunction) => {
   try { res.status(201).json({ success: true, data: await usuariosService.registrarUsuario(req.body) }); } catch (e) { next(e); }
 });
-router.put('/usuarios/:id', verificarToken, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/auth/login', async (req: Request, res: Response, next: NextFunction) => {
+  try { res.json({ success: true, data: await usuariosService.login(req.body) }); } catch (e) { next(e); }
+});
+
+router.get('/usuarios', verificarToken, requiereRol('ADMIN', 'AUDITOR'), async (req: Request, res: Response, next: NextFunction) => {
+  try { res.json({ success: true, data: await usuariosService.listarUsuarios() }); } catch (e) { next(e); }
+});
+router.get('/usuarios/:id', verificarToken, propioOAdmin, async (req: Request, res: Response, next: NextFunction) => {
+  try { res.json({ success: true, data: await usuariosService.obtenerUsuarioPorId(Number(req.params.id)) }); } catch (e) { next(e); }
+});
+router.put('/usuarios/:id', verificarToken, propioOAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try { res.json({ success: true, data: await usuariosService.actualizarUsuario(Number(req.params.id), req.body) }); } catch (e) { next(e); }
 });
-router.delete('/usuarios/:id', verificarToken, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/usuarios/:id', verificarToken, requiereRol('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
   try { await usuariosService.eliminarUsuario(Number(req.params.id)); res.json({ success: true, message: 'Usuario eliminado' }); } catch (e) { next(e); }
 });
 

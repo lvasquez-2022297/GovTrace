@@ -1,19 +1,25 @@
-import jwt from 'jsonwebtoken';
-
-const SECRET_KEY = process.env.JWT_SECRET || 'secret_govtrace_key';
-const EXPIRES_IN = '8h';
+import jwt, { SignOptions } from 'jsonwebtoken';
+import { RolUsuario } from '../models/Usuarios';
 
 export interface TokenPayload {
   id: number;
-  rol: string;
+  rol: RolUsuario;
 }
 
 export class JwtUtils {
+  private static get secret(): string {
+    const s = process.env.JWT_SECRET;
+    if (!s) throw new Error('JWT_SECRET no está definido en el .env');
+    return s;
+  }
+
   static generarToken(payload: TokenPayload): string {
-    return jwt.sign(payload, SECRET_KEY, { expiresIn: EXPIRES_IN });
+    return jwt.sign(payload, this.secret, {
+      expiresIn: (process.env.JWT_EXPIRES_IN || '8h') as SignOptions['expiresIn'],
+    });
   }
 
   static verificarToken(token: string): TokenPayload {
-    return jwt.verify(token, SECRET_KEY) as TokenPayload;
+    return jwt.verify(token, this.secret) as TokenPayload;
   }
 }
