@@ -51,10 +51,10 @@ export class LicitacionesService {
       .pipe(map((res) => res.data));
   }
 
-  cambiarEstado(id: number, estado: EstadoLicitacion): Observable<Licitacion> {
-    return this.http
-      .patch<ApiOne<Licitacion>>(`${this.apiUrl}/${id}/estado`, { estado })
-      .pipe(map((r) => r.data));
+  cambiarEstado(id: number, estado: string): Observable<Licitacion> {
+  return this.http
+    .patch<{ success: boolean; data: Licitacion }>(`${this.apiUrl}/${id}/estado`, { estado })
+    .pipe(map((res) => res.data));
   }
 
   crear(payload: LicitacionPayload): Observable<Licitacion> {

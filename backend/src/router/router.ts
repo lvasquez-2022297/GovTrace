@@ -83,9 +83,16 @@ router.post('/licitaciones', ...soloAdmin, ruta(async (req, res) => {
   const datos = { ...req.body, creado_por: (req as AuthRequest).usuario?.id };
   res.status(201).json({ success: true, data: await licitacionesService.crearLicitacion(datos) });
 }));
+
 router.put('/licitaciones/:id', ...soloAdmin, ruta(async (req, res) => {
   res.json({ success: true, data: await licitacionesService.actualizarLicitacion(id(req), req.body) });
 }));
+
+router.patch('/licitaciones/:id/estado', verificarToken, requiereRol('ADMIN', 'AUDITOR'), ruta(async (req, res) => {
+  const nuevoEstado = String(req.body?.estado ?? '').trim();
+  res.json({ success: true, data: await licitacionesService.cambiarEstado(id(req), nuevoEstado) });
+}));
+
 router.delete('/licitaciones/:id', ...soloAdmin, ruta(async (req, res) => {
   await licitacionesService.eliminarLicitacion(id(req));
   res.json({ success: true, message: 'Licitación eliminada' });

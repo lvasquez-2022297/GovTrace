@@ -41,8 +41,28 @@ export class LicitacionesService {
     return await this.repo.obtenerTodas();
   }
 
+  async cambiarEstado(id: number, estado: string) {
+  const estadosValidos: EstadoLicitacion[] = ['PUBLICADA', 'ADJUDICADA', 'CANCELADA', 'CON_ALERTA'];
+  
+  if (!estadosValidos.includes(estado as EstadoLicitacion)) {
+    throw new AppError('Estado no válido.', 400);
+  }
+
+  const licitacionExistente = await this.obtenerLicitacionPorId(id);
+
+  const datosActualizados = this.validar({
+    ...licitacionExistente,
+    estado: estado as EstadoLicitacion
+  });
+
+  const actualizada = await this.repo.actualizar(id, datosActualizados);
+  if (!actualizada) throw new AppError(`Licitación con ID ${id} no encontrada.`, 404);
+
+  return actualizada;
+}
+
   async obtenerLicitacionPorId(id: number) {
-    const l = await this.repo.obtenerPorId(id);
+    const l = await this.repo.obtenerPorId(id); 
     if (!l) throw new AppError(`Licitación con ID ${id} no encontrada.`, 404);
     return l;
   }

@@ -101,32 +101,21 @@ export class Licitaciones implements OnInit {
   }
 
   cambiarEstadoDirecto(item: Licitacion, nuevoEstado: string): void {
-    const estado = nuevoEstado as EstadoLicitacion;
-    if (item.estado === estado) return;
+  if (item.estado === nuevoEstado) return;
 
-    const payload: LicitacionPayload = {
-      codigo_licitacion: item.codigo_licitacion,
-      titulo: item.titulo,
-      descripcion: item.descripcion,
-      entidad: item.entidad,
-      presupuesto_asignado: Number(item.presupuesto_asignado),
-      estado: estado,
-      fecha_inicio: (item.fecha_inicio ?? '').slice(0, 10),
-      fecha_cierre: (item.fecha_cierre ?? '').slice(0, 10)
-    };
-
-    this.licitacionesService.actualizar(item.id, payload).subscribe({
-      next: (actualizada) => {
-        item.estado = actualizada.estado;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.errorMensaje = err.error?.message || 'No se pudo actualizar el estado de la licitación.';
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
+  this.licitacionesService.cambiarEstado(item.id, nuevoEstado).subscribe({
+    next: (actualizada) => {
+      item.estado = actualizada.estado || (nuevoEstado as any);
+      this.errorMensaje = '';
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      this.errorMensaje = err.error?.message || 'No tienes permisos para cambiar el estado.';
+      this.cargar(); // Recarga la tabla para restaurar la opción previa si falla
+      this.cdr.detectChanges();
+    }
+  });
+}
   abrirCrear(): void {
     this.editandoId = null;
     this.errorForm = '';
