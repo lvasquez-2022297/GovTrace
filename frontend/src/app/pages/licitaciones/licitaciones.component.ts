@@ -1,12 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  AbstractControl, FormBuilder, FormGroup, FormsModule,
-  ReactiveFormsModule, ValidationErrors, Validators
-} from '@angular/forms';
-import {
-  LicitacionesService, Licitacion, LicitacionPayload
-} from '../../core/services/licitaciones.service';
+import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { LicitacionesService, Licitacion, LicitacionPayload, EstadoLicitacion } from '../../core/services/licitaciones.service';
 import { Auth } from '../../core/services/auth.service';
 
 function fechasValidas(group: AbstractControl): ValidationErrors | null {
@@ -31,6 +26,7 @@ export class Licitaciones implements OnInit {
   estadoFiltro = 'TODOS';
 
   esAdmin = false;
+  esAuditor = false;
 
   modalAbierto = false;
   editandoId: number | null = null;
@@ -41,7 +37,8 @@ export class Licitaciones implements OnInit {
   constructor(
     private licitacionesService: LicitacionesService,
     private authService: Auth,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef
   ) {
     this.form = this.fb.group(
       {
@@ -59,21 +56,30 @@ export class Licitaciones implements OnInit {
   }
 
   ngOnInit(): void {
-    this.esAdmin = this.authService.esAdmin();
+    const usuario = this.authService.getUsuarioActual();
+    this.esAdmin = usuario?.rol === 'ADMIN';
+    this.esAuditor = usuario?.rol === 'AUDITOR';
     this.cargar();
+  }
+
+  get puedeModificarEstado(): boolean {
+    return this.esAdmin || this.esAuditor;
   }
 
   cargar(): void {
     this.cargando = true;
+    this.cdr.detectChanges();
     this.licitacionesService.getAll().subscribe({
       next: (data) => {
         this.licitaciones = data;
         this.cargando = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error cargando licitaciones:', err);
         this.errorMensaje = 'No se pudieron cargar las licitaciones. Intenta de nuevo más tarde.';
         this.cargando = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -94,11 +100,39 @@ export class Licitaciones implements OnInit {
     });
   }
 
+  cambiarEstadoDirecto(item: Licitacion, nuevoEstado: string): void {
+    const estado = nuevoEstado as EstadoLicitacion;
+    if (item.estado === estado) return;
+
+    const payload: LicitacionPayload = {
+      codigo_licitacion: item.codigo_licitacion,
+      titulo: item.titulo,
+      descripcion: item.descripcion,
+      entidad: item.entidad,
+      presupuesto_asignado: Number(item.presupuesto_asignado),
+      estado: estado,
+      fecha_inicio: (item.fecha_inicio ?? '').slice(0, 10),
+      fecha_cierre: (item.fecha_cierre ?? '').slice(0, 10)
+    };
+
+    this.licitacionesService.actualizar(item.id, payload).subscribe({
+      next: (actualizada) => {
+        item.estado = actualizada.estado;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.errorMensaje = err.error?.message || 'No se pudo actualizar el estado de la licitación.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   abrirCrear(): void {
     this.editandoId = null;
     this.errorForm = '';
     this.form.reset({ estado: 'PUBLICADA', presupuesto_asignado: null });
     this.modalAbierto = true;
+    this.cdr.detectChanges();
   }
 
   abrirEditar(item: Licitacion): void {
@@ -115,21 +149,24 @@ export class Licitaciones implements OnInit {
       fecha_cierre: (item.fecha_cierre ?? '').slice(0, 10)
     });
     this.modalAbierto = true;
+    this.cdr.detectChanges();
   }
 
   cerrarModal(): void {
     this.modalAbierto = false;
+    this.cdr.detectChanges();
   }
 
   guardar(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.cdr.detectChanges();
       return;
     }
 
     this.guardando = true;
     this.errorForm = '';
-
+    this.cdr.detectChanges();
     const v = this.form.value;
     const payload: LicitacionPayload = {
       codigo_licitacion: v.codigo_licitacion.trim(),
@@ -155,6 +192,7 @@ export class Licitaciones implements OnInit {
       error: (err) => {
         this.guardando = false;
         this.errorForm = err.error?.message || 'No se pudo guardar la licitación.';
+        this.cdr.detectChanges();
       }
     });
   }
@@ -168,9 +206,11 @@ export class Licitaciones implements OnInit {
     this.licitacionesService.eliminar(item.id).subscribe({
       next: () => {
         this.licitaciones = this.licitaciones.filter((l) => l.id !== item.id);
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.errorMensaje = err.error?.message || 'No se pudo eliminar la licitación.';
+        this.cdr.detectChanges();
       }
     });
   }

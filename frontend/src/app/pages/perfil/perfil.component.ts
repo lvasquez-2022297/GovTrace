@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Auth } from '../../core/services/auth.service';
@@ -30,7 +30,8 @@ export class Perfil implements OnInit {
     private authService: Auth,
     private usuariosService: UsuariosService,
     private licitacionesService: LicitacionesService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef
   ) {
     this.form = this.fb.group({
       nombre: ['', [Validators.required, Validators.minLength(3)]],
@@ -44,6 +45,7 @@ export class Perfil implements OnInit {
     if (!actual) {
       this.errorMensaje = 'No se pudo identificar tu sesión.';
       this.cargando = false;
+      this.cdr.detectChanges();
       return;
     }
 
@@ -53,10 +55,12 @@ export class Perfil implements OnInit {
         this.usuario = u;
         this.cargando = false;
         if (u.rol === 'ADMIN') this.contarLicitaciones(u.id);
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.errorMensaje = err.error?.message || 'No se pudo cargar tu perfil.';
         this.cargando = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -92,11 +96,13 @@ export class Perfil implements OnInit {
     this.errorForm = '';
     this.form.reset({ nombre: this.usuario.nombre, foto_url: this.usuario.foto_url ?? '' });
     this.editando = true;
+    this.cdr.detectChanges();
   }
 
   cancelar(): void {
     this.editando = false;
     this.fotoRota = false;
+    this.cdr.detectChanges();
   }
 
   guardar(): void {
@@ -104,6 +110,7 @@ export class Perfil implements OnInit {
 
     this.guardando = true;
     this.errorForm = '';
+    this.cdr.detectChanges();
     const v = this.form.value;
 
     this.usuariosService.actualizar(this.usuario.id, {
@@ -118,10 +125,12 @@ export class Perfil implements OnInit {
         this.editando = false;
         this.fotoRota = false;
         this.exito = 'Perfil actualizado correctamente.';
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.guardando = false;
         this.errorForm = err.error?.message || 'No se pudo guardar el perfil.';
+        this.cdr.detectChanges();
       }
     });
   }

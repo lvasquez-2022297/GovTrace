@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -37,7 +37,8 @@ export class Adjudicaciones implements OnInit {
     private licitacionesService: LicitacionesService,
     private proveedoresService: ProveedoresService,
     private authService: Auth,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef
   ) {
     this.form = this.fb.group({
       licitacion_id: [null as number | null, [Validators.required]],
@@ -50,16 +51,19 @@ export class Adjudicaciones implements OnInit {
   ngOnInit(): void {
     this.esAdmin = this.authService.esAdmin();
     this.cargar();
+    this.cdr.detectChanges();
   }
 
   cargar(): void {
     this.cargando = true;
+    this.cdr.detectChanges();
     this.adjudicacionesService.getAll().subscribe({
-      next: (data) => { this.adjudicaciones = data; this.cargando = false; },
+      next: (data) => { this.adjudicaciones = data; this.cargando = false; this.cdr.detectChanges(); },
       error: (err) => {
         console.error('Error cargando adjudicaciones:', err);
         this.errorMensaje = 'No se pudieron cargar las adjudicaciones. Intenta de nuevo más tarde.';
         this.cargando = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -89,6 +93,7 @@ export class Adjudicaciones implements OnInit {
           (l) => !yaAdjudicadas.has(l.id) && l.estado !== 'CANCELADA'
         );
         this.proveedores = proveedores;
+        this.cdr.detectChanges();
       },
       error: () => { this.errorForm = 'No se pudieron cargar las licitaciones y proveedores.'; }
     });
@@ -101,11 +106,13 @@ export class Adjudicaciones implements OnInit {
     this.form.get('licitacion_id')?.enable();
     this.cargarOpciones();
     this.modalAbierto = true;
+    this.cdr.detectChanges();
   }
 
   abrirEditar(a: Adjudicacion): void {
     this.editando = a;
     this.errorForm = '';
+    this.cdr.detectChanges();
     this.form.reset({
       licitacion_id: a.licitacion_id,
       proveedor_id: a.proveedor_id,
@@ -115,14 +122,16 @@ export class Adjudicaciones implements OnInit {
     this.form.get('licitacion_id')?.disable(); 
     this.cargarOpciones();
     this.modalAbierto = true;
+    this.cdr.detectChanges();
   }
 
-  cerrarModal(): void { this.modalAbierto = false; }
+  cerrarModal(): void { this.modalAbierto = false; this.cdr.detectChanges(); }
 
   guardar(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.guardando = true;
     this.errorForm = '';
+    this.cdr.detectChanges();
 
     const v = this.form.getRawValue();
     const payload: AdjudicacionPayload = {
@@ -140,6 +149,7 @@ export class Adjudicaciones implements OnInit {
       error: (err) => {
         this.guardando = false;
         this.errorForm = err.error?.message || 'No se pudo guardar la adjudicación.';
+        this.cdr.detectChanges();
       }
     });
   }

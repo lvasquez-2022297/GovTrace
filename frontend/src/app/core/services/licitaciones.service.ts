@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
+
 export type EstadoLicitacion = 'PUBLICADA' | 'ADJUDICADA' | 'CANCELADA' | 'CON_ALERTA';
 
 export interface Licitacion {
@@ -48,6 +49,12 @@ export class LicitacionesService {
     return this.http
       .get<{ success: boolean; data: Licitacion[] }>(this.apiUrl)
       .pipe(map((res) => res.data));
+  }
+
+  cambiarEstado(id: number, estado: EstadoLicitacion): Observable<Licitacion> {
+    return this.http
+      .patch<ApiOne<Licitacion>>(`${this.apiUrl}/${id}/estado`, { estado })
+      .pipe(map((r) => r.data));
   }
 
   crear(payload: LicitacionPayload): Observable<Licitacion> {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -40,23 +40,29 @@ export class Dashboard implements OnInit {
     { ranking: 5, institucion: 'Ministerio de Comunicaciones', indiceTransparencia: 42.0, tasaAlerta: 36.5 }
   ];
 
-  constructor(private dashboardService: DashboardService) {}
+  constructor(
+    private dashboardService: DashboardService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.dashboardService.getMetrics().subscribe({
       next: (data) => {
         this.metrics = data;
         this.cargando = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error cargando métricas del dashboard:', err);
         this.errorMensaje = 'No se pudieron cargar las métricas. Intenta de nuevo más tarde.';
         this.cargando = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
   setFiltro(categoria: string): void {
     this.filtroSeleccionado = categoria;
+    this.cdr.detectChanges();
   }
 }

@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginDTO, RegistroDTO, Usuario } from '../models/usuario.model';
 
-interface ApiResponse<T> {
+export interface ApiResponse<T> {
   success: boolean;
+  message?: string;
   data: T;
 }
 
@@ -14,12 +15,24 @@ interface ApiResponse<T> {
 export class Auth {
   private api = `${environment.apiUrl}/auth`;
 
+  private currentUserSubject = new BehaviorSubject<Usuario | null>(this.getUsuarioActual());
+  public currentUser$ = this.currentUserSubject.asObservable();
+
   constructor(private http: HttpClient) {}
 
-  register(datos: RegistroDTO): Observable<Usuario> {
-    return this.http
-      .post<ApiResponse<Usuario>>(`${this.api}/register`, datos)
-      .pipe(map((res) => res.data));
+  getUsuarioActual(): Usuario | null {
+    const userStr = localStorage.getItem('usuario');
+    if (!userStr) return null;
+    try {
+      return JSON.parse(userStr) as Usuario;
+    } catch {
+      return null;
+    }
+  }
+
+  // 3. Método getToken que faltaba
+  getToken(): string | null {
+    return localStorage.getItem('token');
   }
 
   login(credenciales: LoginDTO): Observable<AuthResponse> {
@@ -30,51 +43,34 @@ export class Auth {
         tap((data) => {
           localStorage.setItem('token', data.token);
           localStorage.setItem('usuario', JSON.stringify(data.usuario));
+          this.currentUserSubject.next(data.usuario);
         })
       );
+  }
+
+  register(datos: RegistroDTO): Observable<Usuario> {
+    return this.http
+      .post<ApiResponse<Usuario>>(`${this.api}/register`, datos)
+      .pipe(map((res) => res.data));
   }
 
   logout(): void {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
-  }
-
-  getToken(): string | null {
-    return localStorage.getItem('token');
-  }
-
-  getUsuarioActual(): Usuario | null {
-    const raw = localStorage.getItem('usuario');
-    if (!raw || raw === 'undefined') return null;
-    try {
-      return JSON.parse(raw) as Usuario;
-    } catch {
-      localStorage.removeItem('usuario');
-      return null;
-    }
+    this.currentUserSubject.next(null);
   }
 
   guardarUsuarioLocal(usuario: Usuario): void {
-  localStorage.setItem('usuario', JSON.stringify(usuario));
- }
-
-  esAdmin(): boolean {
-    return this.getUsuarioActual()?.rol === 'ADMIN';
+    localStorage.setItem('usuario', JSON.stringify(usuario));
+    this.currentUserSubject.next(usuario);
   }
 
   isAuthenticated(): boolean {
-    const token = this.getToken();
-    if (!token || token === 'undefined') return false;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.exp && payload.exp * 1000 < Date.now()) {
-        this.logout();
-        return false;
-      }
-      return true;
-    } catch {
-      this.logout();
-      return false;
-    }
+    return !!this.getToken();
+  }
+
+  esAdmin(): boolean {
+    const usuario = this.getUsuarioActual();
+    return usuario?.rol === 'ADMIN';
   }
 }

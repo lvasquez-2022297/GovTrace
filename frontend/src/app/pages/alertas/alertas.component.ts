@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AlertasService, Alerta, AlertaPayload } from '../../core/services/alertas.service';
@@ -40,7 +40,8 @@ export class Alertas implements OnInit {
     private alertasService: AlertasService,
     private licitacionesService: LicitacionesService,
     private authService: Auth,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef
   ) {
     this.form = this.fb.group({
       licitacion_id: [null as number | null, [Validators.required]],
@@ -53,16 +54,18 @@ export class Alertas implements OnInit {
   ngOnInit(): void {
     this.esAdmin = this.authService.esAdmin();
     this.cargar();
+    this.cdr.detectChanges();
   }
 
   cargar(): void {
     this.cargando = true;
     this.alertasService.getAll().subscribe({
-      next: (data) => { this.alertas = data; this.cargando = false; },
+      next: (data) => { this.alertas = data; this.cargando = false; this.cdr.detectChanges(); },
       error: (err) => {
         console.error('Error cargando alertas:', err);
         this.errorMensaje = 'No se pudieron cargar las alertas. Intenta de nuevo más tarde.';
         this.cargando = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -82,7 +85,7 @@ export class Alertas implements OnInit {
 
   private cargarLicitaciones(): void {
     this.licitacionesService.getAll().subscribe({
-      next: (data) => { this.licitaciones = data; },
+      next: (data) => { this.licitaciones = data; this.cdr.detectChanges(); },
       error: () => { this.errorForm = 'No se pudieron cargar las licitaciones.'; }
     });
   }
@@ -93,6 +96,7 @@ export class Alertas implements OnInit {
     this.form.reset({ tipo_alerta: 'SOBRECOSTO', nivel_riesgo: 'MEDIO' });
     this.cargarLicitaciones();
     this.modalAbierto = true;
+    this.cdr.detectChanges();
   }
 
   abrirEditar(a: Alerta): void {
@@ -105,6 +109,7 @@ export class Alertas implements OnInit {
       descripcion: a.descripcion
     });
     this.cargarLicitaciones();
+    this.cdr.detectChanges();
     this.modalAbierto = true;
   }
 
@@ -114,6 +119,7 @@ export class Alertas implements OnInit {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.guardando = true;
     this.errorForm = '';
+    this.cdr.detectChanges();
 
     const v = this.form.value;
     const payload: AlertaPayload = {
@@ -138,6 +144,7 @@ export class Alertas implements OnInit {
 
   eliminar(a: Alerta): void {
     if (!confirm(`¿Eliminar la alerta de ${a.codigo_licitacion}? Esta acción no se puede deshacer.`)) return;
+    this
     this.alertasService.eliminar(a.id).subscribe({
       next: () => { this.alertas = this.alertas.filter((x) => x.id !== a.id); },
       error: (err) => { this.errorMensaje = err.error?.message || 'No se pudo eliminar la alerta.'; }

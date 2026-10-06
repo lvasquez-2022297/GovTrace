@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProveedoresService, Proveedor, ProveedorPayload } from '../../core/services/proveedores.service';
 import { Auth } from '../../core/services/auth.service';
+
 
 @Component({
   selector: 'app-proveedores',
@@ -29,7 +30,8 @@ export class Proveedores implements OnInit {
   constructor(
     private proveedoresService: ProveedoresService,
     private authService: Auth,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef
   ) {
     this.form = this.fb.group({
       nit: ['', [Validators.required, Validators.maxLength(20)]],
@@ -42,18 +44,22 @@ export class Proveedores implements OnInit {
   ngOnInit(): void {
     this.esAdmin = this.authService.esAdmin();
     this.cargar();
+    this.cdr.detectChanges();
   }
 
   cargar(): void {
     this.cargando = true;
+    this.cdr.detectChanges();
     this.proveedoresService.getAll().subscribe({
-      next: (data) => { this.proveedores = data; this.cargando = false; },
+      next: (data) => { this.proveedores = data; this.cargando = false; this.cdr.detectChanges(); },
       error: (err) => {
         console.error('Error cargando proveedores:', err);
         this.errorMensaje = 'No se pudieron cargar los proveedores. Intenta de nuevo más tarde.';
         this.cargando = false;
+        this.cdr.detectChanges();
       }
     });
+    this.cdr.detectChanges();
   }
 
   private nivel(c: number): 'ALTA' | 'MEDIA' | 'BAJA' {
@@ -79,6 +85,7 @@ export class Proveedores implements OnInit {
     this.errorForm = '';
     this.form.reset({ calificacion: 5 });
     this.modalAbierto = true;
+    this.cdr.detectChanges();
   }
 
   abrirEditar(p: Proveedor): void {
@@ -86,6 +93,7 @@ export class Proveedores implements OnInit {
     this.errorForm = '';
     this.form.reset({ nit: p.nit, razon_social: p.razon_social, email: p.email, calificacion: p.calificacion });
     this.modalAbierto = true;
+    this.cdr.detectChanges();
   }
 
   cerrarModal(): void { this.modalAbierto = false; }
@@ -94,6 +102,8 @@ export class Proveedores implements OnInit {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.guardando = true;
     this.errorForm = '';
+    this.cdr.detectChanges();
+    
 
     const v = this.form.value;
     const payload: ProveedorPayload = {
@@ -112,16 +122,19 @@ export class Proveedores implements OnInit {
       error: (err) => {
         this.guardando = false;
         this.errorForm = err.error?.message || 'No se pudo guardar el proveedor.';
+        this.cdr.detectChanges();
       }
     });
   }
 
   eliminar(p: Proveedor): void {
     if (!confirm(`¿Eliminar a ${p.razon_social}? Esta acción no se puede deshacer.`)) return;
+    this.cdr.detectChanges();
     this.proveedoresService.eliminar(p.id).subscribe({
       next: () => { this.proveedores = this.proveedores.filter((x) => x.id !== p.id); },
       error: (err) => { this.errorMensaje = err.error?.message || 'No se pudo eliminar el proveedor.'; }
     });
+    this.cdr.detectChanges();
   }
 
   campoInvalido(nombre: string): boolean {

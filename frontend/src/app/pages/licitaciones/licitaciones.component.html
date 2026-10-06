@@ -53,16 +53,38 @@
           <td class="title-cell">{{ item.titulo }}</td>
           <td>{{ item.entidad || 'Sin entidad' }}</td>
           <td class="text-right font-bold">Q{{ +item.presupuesto_asignado | number:'1.2-2' }}</td>
+          
           <td>
-            <span class="status-badge" [ngClass]="{
-              'badge-process': item.estado === 'PUBLICADA',
-              'badge-success': item.estado === 'ADJUDICADA',
-              'badge-danger': item.estado === 'CON_ALERTA',
-              'badge-muted': item.estado === 'CANCELADA'
-            }">
+            <select
+              *ngIf="puedeModificarEstado"
+              [value]="item.estado"
+              (change)="cambiarEstadoDirecto(item, $any($event.target).value)"
+              class="status-badge select-estado"
+              [ngClass]="{
+                'badge-process': item.estado === 'PUBLICADA',
+                'badge-success': item.estado === 'ADJUDICADA',
+                'badge-danger': item.estado === 'CON_ALERTA',
+                'badge-muted': item.estado === 'CANCELADA'
+              }">
+              <option value="PUBLICADA">PUBLICADA</option>
+              <option value="ADJUDICADA">ADJUDICADA</option>
+              <option value="CON_ALERTA">CON_ALERTA</option>
+              <option value="CANCELADA">CANCELADA</option>
+            </select>
+
+            <span
+              *ngIf="!puedeModificarEstado"
+              class="status-badge"
+              [ngClass]="{
+                'badge-process': item.estado === 'PUBLICADA',
+                'badge-success': item.estado === 'ADJUDICADA',
+                'badge-danger': item.estado === 'CON_ALERTA',
+                'badge-muted': item.estado === 'CANCELADA'
+              }">
               {{ item.estado }}
             </span>
           </td>
+
           <td class="text-muted">{{ item.fecha_inicio | date:'dd/MM/yyyy' }}</td>
           <td *ngIf="esAdmin" class="acciones">
             <button type="button" class="btn-accion btn-editar" (click)="abrirEditar(item)">Editar</button>
@@ -79,7 +101,6 @@
   </div>
 </div>
 
-<!-- Modal crear / editar -->
 <div class="modal-backdrop" *ngIf="modalAbierto" (click)="cerrarModal()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <h2>{{ editandoId ? 'Editar licitación' : 'Nueva licitación' }}</h2>

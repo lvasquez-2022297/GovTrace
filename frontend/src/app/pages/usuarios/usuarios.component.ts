@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef  } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { of, switchMap } from 'rxjs';
@@ -35,7 +35,8 @@ export class Usuarios implements OnInit {
   constructor(
     private usuariosService: UsuariosService,
     private authService: Auth,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef
   ) {
     this.form = this.fb.group({
       nombre: ['', [Validators.required, Validators.minLength(3)]],
@@ -50,16 +51,19 @@ export class Usuarios implements OnInit {
     this.esAdmin = actual?.rol === 'ADMIN';
     this.miId = actual?.id ?? null;
     this.cargar();
+    this.cdr.detectChanges();
   }
 
   cargar(): void {
     this.cargando = true;
+    this.cdr.detectChanges();
     this.errorMensaje = '';
     this.usuariosService.getAll().subscribe({
-      next: (data) => { this.usuarios = data; this.cargando = false; },
+      next: (data) => { this.usuarios = data; this.cargando = false; this.cdr.detectChanges(); },
       error: (err) => {
         this.errorMensaje = err.error?.message || 'No se pudo cargar la lista de usuarios.';
         this.cargando = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -90,16 +94,18 @@ export class Usuarios implements OnInit {
     this.form.get('rol')?.enable();
     this.configurarPassword(true);
     this.modalAbierto = true;
+    this.cdr.detectChanges();
   }
 
   abrirEditar(u: Usuario): void {
     this.editando = u;
+    this.cdr.detectChanges();
     this.errorForm = '';
     this.form.reset({ nombre: u.nombre, email: u.email, rol: u.rol, password: '' });
-    // Nadie puede cambiarse su propio rol
     if (u.id === this.miId) this.form.get('rol')?.disable(); else this.form.get('rol')?.enable();
     this.configurarPassword(false);
     this.modalAbierto = true;
+    this.cdr.detectChanges();
   }
 
   cerrarModal(): void { this.modalAbierto = false; }
@@ -108,6 +114,7 @@ export class Usuarios implements OnInit {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.guardando = true;
     this.errorForm = '';
+    this.cdr.detectChanges();
 
     const v = this.form.getRawValue();
 
@@ -141,15 +148,18 @@ export class Usuarios implements OnInit {
     this.guardando = false;
     this.modalAbierto = false;
     this.cargar();
+    this.cdr.detectChanges();
   }
 
   private falloGuardado(err: any): void {
     this.guardando = false;
     this.errorForm = err.error?.message || 'No se pudo guardar el usuario.';
+    this.cdr.detectChanges();
   }
 
   eliminar(usuario: Usuario): void {
     if (!confirm(`¿Eliminar a ${usuario.nombre}? Esta acción no se puede deshacer.`)) return;
+    this.cdr.detectChanges();
     this.usuariosService.eliminar(usuario.id).subscribe({
       next: () => { this.usuarios = this.usuarios.filter((u) => u.id !== usuario.id); },
       error: (err) => { this.errorMensaje = err.error?.message || 'No se pudo eliminar el usuario.'; }
