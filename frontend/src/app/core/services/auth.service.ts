@@ -54,6 +54,10 @@ export class Auth {
     }
   }
 
+  guardarUsuarioLocal(usuario: Usuario): void {
+  localStorage.setItem('usuario', JSON.stringify(usuario));
+ }
+
   esAdmin(): boolean {
     return this.getUsuarioActual()?.rol === 'ADMIN';
   }

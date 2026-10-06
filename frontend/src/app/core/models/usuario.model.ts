@@ -5,6 +5,7 @@ export interface Usuario {
   nombre: string;
   email: string;
   rol: RolUsuario;
+  foto_url?: string | null;
   creado_en: string;
 }
 

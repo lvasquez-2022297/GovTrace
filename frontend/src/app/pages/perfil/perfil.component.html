@@ -1,0 +1,70 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Mi perfil</h1>
+      <p>Consulta y actualiza tu información personal.</p>
+    </div>
+  </div>
+
+  <p *ngIf="errorMensaje" class="error-banner">{{ errorMensaje }}</p>
+  <p *ngIf="cargando" class="estado-carga">Cargando perfil...</p>
+  <p *ngIf="exito" class="exito-banner">{{ exito }}</p>
+
+  <div class="perfil-grid" *ngIf="usuario && !cargando">
+    <section class="perfil-card perfil-resumen">
+      <div class="avatar avatar-grande">
+        <span>{{ iniciales }}</span>
+        <img *ngIf="fotoMostrada && !fotoRota" [src]="fotoMostrada" alt="Foto de perfil" (error)="fotoRota = true" />
+      </div>
+      <h2>{{ usuario.nombre }}</h2>
+      <p class="text-muted">{{ usuario.email }}</p>
+      <span class="role-badge" [ngClass]="{
+        'role-admin': usuario.rol === 'ADMIN',
+        'role-auditor': usuario.rol === 'AUDITOR',
+        'role-user': usuario.rol === 'CIUDADANO'
+      }">{{ usuario.rol }}</span>
+      <small class="error-text" *ngIf="editando && fotoMostrada && fotoRota">No se pudo cargar esa imagen. Revisa la URL.</small>
+    </section>
+
+    <section class="perfil-card">
+      <ng-container *ngIf="!editando">
+        <h3>Datos de la cuenta</h3>
+        <dl class="datos">
+          <dt>Nombre</dt><dd>{{ usuario.nombre }}</dd>
+          <dt>Correo</dt><dd>{{ usuario.email }}</dd>
+          <dt>Rol</dt><dd>{{ usuario.rol }}</dd>
+          <dt>Miembro desde</dt><dd>{{ usuario.creado_en | date:'dd/MM/yyyy' }}</dd>
+          <dt>Permisos</dt><dd>{{ permisos }}</dd>
+          <ng-container *ngIf="licitacionesCreadas !== null">
+            <dt>Licitaciones registradas</dt><dd>{{ licitacionesCreadas }}</dd>
+          </ng-container>
+        </dl>
+        <button type="button" class="btn-nuevo" (click)="editar()">Editar perfil</button>
+      </ng-container>
+
+      <ng-container *ngIf="editando">
+        <h3>Editar perfil</h3>
+        <p *ngIf="errorForm" class="error-banner">{{ errorForm }}</p>
+        <form [formGroup]="form" (ngSubmit)="guardar()">
+          <div class="form-field">
+            <label for="nombre">Nombre completo</label>
+            <input id="nombre" formControlName="nombre" />
+            <small class="error-text" *ngIf="campoInvalido('nombre')">El nombre debe tener al menos 3 caracteres.</small>
+          </div>
+
+          <div class="form-field">
+            <label for="foto">URL de la foto de perfil</label>
+            <input id="foto" type="url" formControlName="foto_url" placeholder="https://ejemplo.com/mi-foto.jpg" />
+            <small class="text-muted">Déjalo vacío para quitar la foto.</small>
+            <small class="error-text" *ngIf="campoInvalido('foto_url')">Debe ser una URL que empiece con http:// o https://.</small>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-cancelar" (click)="cancelar()">Cancelar</button>
+            <button type="submit" class="btn-nuevo" [disabled]="guardando">{{ guardando ? 'Guardando...' : 'Guardar' }}</button>
+          </div>
+        </form>
+      </ng-container>
+    </section>
+  </div>
+</div>

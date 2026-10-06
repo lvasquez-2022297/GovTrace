@@ -51,7 +51,7 @@
     <div class="metrics-grid">
       <div class="metric-card">
         <span class="metric-label">Total Presupuestado</span>
-        <h2 class="metric-value">Q{{ metrics.totalPresupuesto }}M</h2>
+        <h2 class="metric-value">Q{{ metrics.totalPresupuesto / 1000000 | number:'1.1-1' }}M</h2>
         <span class="metric-subtext subtext-green">⬆ 98.4% Ejecutado Correctamente</span>
       </div>
 

@@ -23,6 +23,11 @@ export class Header {
     return this.authService.getUsuarioActual();
   }
 
+  get iniciales(): string {
+  const partes = (this.usuario?.nombre ?? '').trim().split(/\s+/).filter(Boolean);
+  return partes.slice(0, 2).map((p) => p[0].toUpperCase()).join('') || '?';
+ }
+
   get puedeVerUsuarios(): boolean {
     const rol = this.usuario?.rol;
     return rol === 'ADMIN' || rol === 'AUDITOR';

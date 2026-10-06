@@ -1,53 +1,48 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { forkJoin, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface Proveedor {
   id: number;
   nit: string;
-  nombre: string;
+  razon_social: string;
   email: string;
   calificacion: number;
-  contratosAdjudicados: number;
-  montoTotalContratado: number;
+  creado_en: string;
+  contratos: number;
+  monto_total: number;
 }
 
-interface ApiList<T> {
-  success: boolean;
-  data: T[];
+export interface ProveedorPayload {
+  nit: string;
+  razon_social: string;
+  email: string;
+  calificacion: number;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+interface ApiOne<T> { success: boolean; data: T; }
+
+@Injectable({ providedIn: 'root' })
 export class ProveedoresService {
-  private api = environment.apiUrl;
+  private apiUrl = `${environment.apiUrl}/proveedores`;
 
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<Proveedor[]> {
-    return forkJoin({
-      proveedores: this.http.get<ApiList<any>>(`${this.api}/proveedores`),
-      adjudicaciones: this.http.get<ApiList<any>>(`${this.api}/adjudicaciones`)
-    }).pipe(
-      map(({ proveedores, adjudicaciones }) =>
-        proveedores.data.map((p) => {
-          const suyas = adjudicaciones.data.filter((a) => a.proveedor_id === p.id);
-          return {
-            id: p.id,
-            nit: p.nit,
-            nombre: p.razon_social,
-            email: p.email,
-            calificacion: Number(p.calificacion),
-            contratosAdjudicados: suyas.length,
-            montoTotalContratado: suyas.reduce(
-              (suma, a) => suma + Number(a.monto_adjudicado || 0), 0
-            )
-          } as Proveedor;
-        })
-      )
-    );
+    return this.http.get<ApiOne<Proveedor[]>>(this.apiUrl).pipe(map((r) => r.data));
+  }
+
+  crear(p: ProveedorPayload): Observable<Proveedor> {
+    return this.http.post<ApiOne<Proveedor>>(this.apiUrl, p).pipe(map((r) => r.data));
+  }
+
+  actualizar(id: number, p: ProveedorPayload): Observable<Proveedor> {
+    return this.http.put<ApiOne<Proveedor>>(`${this.apiUrl}/${id}`, p).pipe(map((r) => r.data));
+  }
+
+  eliminar(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

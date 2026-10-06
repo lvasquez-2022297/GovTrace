@@ -1,72 +1,113 @@
 <div class="page-container">
   <div class="page-header">
     <div>
-      <h1>Registro de Adjudicaciones</h1>
-      <p>Historial y seguimiento de contratos otorgados a proveedores del Estado.</p>
+      <h1>Adjudicaciones de Contratos</h1>
+      <p>Trazabilidad de los contratos asignados a proveedores y los montos finales adjudicados.</p>
     </div>
+    <button *ngIf="esAdmin" type="button" class="btn-nuevo" (click)="abrirCrear()">+ Nueva adjudicación</button>
   </div>
 
   <div class="search-bar-card">
     <div class="search-input-wrapper">
-      <input 
-        type="text" 
-        placeholder="Buscar por NOG, título, institución, proveedor o NIT..." 
-        [(ngModel)]="searchTerm" 
-        class="search-input"
-      />
+      <input type="text" placeholder="Buscar por código, título, institución o proveedor..." [(ngModel)]="searchTerm" class="search-input" />
     </div>
-
     <div class="filter-group">
-      <label>Estado Contrato:</label>
+      <label>Estado:</label>
       <select [(ngModel)]="estadoFiltro" class="select-filter">
         <option value="TODOS">Todos los estados</option>
-        <option value="EN_EJECUCION">En Ejecución</option>
-        <option value="FINALIZADO">Finalizado</option>
-        <option value="CANCELADO">Cancelado</option>
+        <option value="ADJUDICADA">Adjudicada</option>
+        <option value="CON_ALERTA">Con alerta 🔴</option>
+        <option value="PUBLICADA">Publicada</option>
+        <option value="CANCELADA">Cancelada</option>
       </select>
     </div>
   </div>
 
-  <div class="table-card">
+  <p *ngIf="errorMensaje" class="error-banner">{{ errorMensaje }}</p>
+  <p *ngIf="cargando" class="estado-carga">Cargando adjudicaciones...</p>
+
+  <div class="table-card" *ngIf="!cargando">
     <table class="data-table">
       <thead>
         <tr>
-          <th>NOG</th>
-          <th>PROCESO</th>
+          <th>CÓDIGO</th>
+          <th>LICITACIÓN</th>
           <th>INSTITUCIÓN</th>
-          <th>PROVEEDOR ADJUDICADO</th>
+          <th>PROVEEDOR GANADOR</th>
           <th class="text-right">MONTO ADJUDICADO</th>
           <th>ESTADO</th>
           <th>FECHA</th>
+          <th *ngIf="esAdmin">ACCIONES</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of adjudicacionesFiltradas">
-          <td class="font-mono"><strong>{{ item.nog }}</strong></td>
-          <td class="title-cell">{{ item.tituloLicitacion }}</td>
-          <td>{{ item.entidad }}</td>
-          <td>
-            <div class="vendor-info">
-              <span class="vendor-name">{{ item.proveedorGanador }}</span>
-              <span class="vendor-nit font-mono">NIT: {{ item.nitProveedor }}</span>
-            </div>
-          </td>
-          <td class="text-right font-bold">Q{{ item.montoAdjudicado | number:'1.2-2' }}</td>
+          <td class="font-mono"><strong>{{ item.codigo_licitacion }}</strong></td>
+          <td class="title-cell">{{ item.titulo }}</td>
+          <td>{{ item.entidad || 'Sin entidad' }}</td>
+          <td>{{ item.razon_social }}<br /><span class="text-muted">NIT {{ item.nit }}</span></td>
+          <td class="text-right font-bold">Q{{ item.monto_adjudicado | number:'1.2-2' }}</td>
           <td>
             <span class="status-badge" [ngClass]="{
-              'badge-process': item.estadoContrato === 'EN_EJECUCION',
-              'badge-success': item.estadoContrato === 'FINALIZADO',
-              'badge-danger': item.estadoContrato === 'CANCELADO'
-            }">
-              {{ item.estadoContrato.replace('_', ' ') }}
-            </span>
+              'badge-success': item.estado_licitacion === 'ADJUDICADA',
+              'badge-danger': item.estado_licitacion === 'CON_ALERTA',
+              'badge-warning': item.estado_licitacion === 'PUBLICADA',
+              'badge-muted': item.estado_licitacion === 'CANCELADA'
+            }">{{ item.estado_licitacion.split('_').join(' ') }}</span>
           </td>
-          <td class="text-muted">{{ item.fechaAdjudicacion }}</td>
+          <td class="text-muted">{{ item.fecha_adjudicacion | date:'dd/MM/yyyy' }}</td>
+          <td *ngIf="esAdmin" class="acciones">
+            <button type="button" class="btn-accion btn-editar" (click)="abrirEditar(item)">Editar</button>
+            <button type="button" class="btn-accion btn-eliminar" (click)="eliminar(item)">Eliminar</button>
+          </td>
         </tr>
         <tr *ngIf="adjudicacionesFiltradas.length === 0">
-          <td colspan="7" class="no-data">No se encontraron adjudicaciones con los criterios especificados.</td>
+          <td [attr.colspan]="esAdmin ? 8 : 7" class="no-data">No se encontraron adjudicaciones.</td>
         </tr>
       </tbody>
     </table>
   </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="modalAbierto" (click)="cerrarModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">  <p *ngIf="errorForm" class="error-banner">{{ errorForm }}</p>
+        <h2>{{ editando ? 'Editar adjudicación' : 'Nueva adjudicación' }}</h2>
+  <form [formGroup]="form" (ngSubmit)="guardar()">
+    <div class="form-field">
+      <label for="lic">Licitación</label>
+      <select id="lic" formControlName="licitacion_id">
+        <option [ngValue]="null" disabled>Selecciona una licitación</option>
+        <option *ngIf="editando" [ngValue]="editando.licitacion_id">{{ editando.codigo_licitacion }} · {{ editando.titulo }}</option>
+        <option *ngFor="let l of licitacionesDisponibles" [ngValue]="l.id">{{ l.codigo_licitacion }} · {{ l.titulo }}</option>
+      </select>
+      <small class="error-text" *ngIf="campoInvalido('licitacion_id')">Selecciona una licitación.</small>
+      <small class="error-text" *ngIf="!editando && licitacionesDisponibles.length === 0">No hay licitaciones disponibles para adjudicar.</small>
+    </div>
+
+    <div class="form-field">
+      <label for="prov">Proveedor ganador</label>
+      <select id="prov" formControlName="proveedor_id">
+        <option [ngValue]="null" disabled>Selecciona un proveedor</option>
+        <option *ngFor="let p of proveedores" [ngValue]="p.id">{{ p.razon_social }} ({{ p.nit }})</option>
+      </select>
+      <small class="error-text" *ngIf="campoInvalido('proveedor_id')">Selecciona un proveedor.</small>
+    </div>
+
+    <div class="form-field">
+      <label for="monto">Monto adjudicado (Q)</label>
+      <input id="monto" type="number" step="0.01" formControlName="monto_adjudicado" />
+      <small class="error-text" *ngIf="campoInvalido('monto_adjudicado')">Debe ser mayor a 0.</small>
+    </div>
+
+    <div class="form-field">
+      <label for="obs">Observaciones</label>
+      <textarea id="obs" rows="3" formControlName="observaciones"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-cancelar" (click)="cerrarModal()">Cancelar</button>
+      <button type="submit" class="btn-nuevo" [disabled]="guardando">{{ guardando ? 'Guardando...' : 'Guardar' }}</button>
+    </div>
+  </form>
+ </div>
 </div>

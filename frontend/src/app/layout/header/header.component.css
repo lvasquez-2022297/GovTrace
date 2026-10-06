@@ -47,6 +47,9 @@
 
 .user-actions { display: flex; align-items: center; gap: 12px; }
 
+.user-link { display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; padding: 4px 8px; border-radius: 8px; }
+.user-link:hover { background: rgba(255, 255, 255, 0.08); }
+
 .user-info { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
 .user-name { font-size: 0.9rem; font-weight: 600; }
 .user-role { font-size: 0.7rem; color: #94a3b8; letter-spacing: 0.5px; }

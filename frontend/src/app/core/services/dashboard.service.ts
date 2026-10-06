@@ -16,9 +16,7 @@ interface ApiList<T> {
   data: T[];
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class DashboardService {
   private api = environment.apiUrl;
 

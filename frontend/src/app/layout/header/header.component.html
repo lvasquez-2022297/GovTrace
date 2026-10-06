@@ -16,6 +16,7 @@
   </button>
 
   <div class="header-collapse" [class.open]="menuAbierto">
+
     <ng-container *ngIf="authService.isAuthenticated(); else invitado">
       <nav class="nav-menu">
         <a routerLink="/dashboard" routerLinkActive="active" (click)="cerrarMenu()">Dashboard</a>
@@ -27,20 +28,28 @@
       </nav>
 
       <div class="user-actions">
-        <div class="user-info" *ngIf="usuario as u">
-          <span class="user-name">{{ u.nombre }}</span>
-          <span class="user-role">{{ u.rol }}</span>
-        </div>
-        <button type="button" (click)="onLogout()" class="btn-logout">Cerrar Sesión</button>
+        <a routerLink="/perfil" class="user-link" *ngIf="usuario as u" (click)="cerrarMenu()">
+          <div class="avatar">
+            <span>{{ iniciales }}</span>
+            <img *ngIf="u.foto_url" [src]="u.foto_url" alt="" (error)="$any($event.target).style.display = 'none'" />
+          </div>
+          <div class="user-info">
+            <span class="user-name">{{ u.nombre }}</span>
+            <span class="user-role">{{ u.rol }}</span>
+          </div>
+        </a>
+        <button type="button" class="btn-logout" (click)="onLogout()">Cerrar Sesión</button>
       </div>
     </ng-container>
 
     <ng-template #invitado>
       <nav class="nav-menu"></nav>
+
       <div class="user-actions">
         <a routerLink="/login" class="btn-login" (click)="cerrarMenu()">Iniciar Sesión</a>
         <a routerLink="/register" class="btn-register" (click)="cerrarMenu()">Registrarse</a>
       </div>
     </ng-template>
+
   </div>
 </header>

@@ -4,18 +4,13 @@
       <h1>Gestión de Usuarios</h1>
       <p>Usuarios registrados en la plataforma GovTrace.</p>
     </div>
+    <button *ngIf="esAdmin" type="button" class="btn-nuevo" (click)="abrirCrear()">+ Nuevo usuario</button>
   </div>
 
   <div class="search-bar-card">
     <div class="search-input-wrapper">
-      <input
-        type="text"
-        class="search-input"
-        placeholder="Buscar por nombre o correo..."
-        [(ngModel)]="busqueda"
-      />
+      <input type="text" class="search-input" placeholder="Buscar por nombre o correo..." [(ngModel)]="busqueda" />
     </div>
-
     <div class="filter-group">
       <label>Rol:</label>
       <select class="select-filter" [(ngModel)]="filtroRol">
@@ -27,8 +22,8 @@
     </div>
   </div>
 
-  <p *ngIf="errorMensaje" class="no-data">{{ errorMensaje }}</p>
-  <p *ngIf="cargando" class="no-data">Cargando usuarios...</p>
+  <p *ngIf="errorMensaje" class="error-banner">{{ errorMensaje }}</p>
+  <p *ngIf="cargando" class="estado-carga">Cargando usuarios...</p>
 
   <div class="table-card" *ngIf="!cargando">
     <table class="data-table">
@@ -46,36 +41,63 @@
           <td class="title-cell">{{ usuario.nombre }}</td>
           <td>{{ usuario.email }}</td>
           <td>
-            <span
-              class="role-badge"
-              [ngClass]="{
-                'role-admin': usuario.rol === 'ADMIN',
-                'role-auditor': usuario.rol === 'AUDITOR',
-                'role-user': usuario.rol === 'CIUDADANO'
-              }"
-            >
-              {{ usuario.rol }}
-            </span>
+            <span class="role-badge" [ngClass]="{
+              'role-admin': usuario.rol === 'ADMIN',
+              'role-auditor': usuario.rol === 'AUDITOR',
+              'role-user': usuario.rol === 'CIUDADANO'
+            }">{{ usuario.rol }}</span>
           </td>
           <td class="text-muted">{{ usuario.creado_en | date:'dd/MM/yyyy' }}</td>
-          <td *ngIf="esAdmin">
-            <button
-              type="button"
-              class="status-badge badge-danger"
-              [disabled]="usuario.id === miId"
-              (click)="eliminar(usuario)"
-            >
-              Eliminar
-            </button>
+          <td *ngIf="esAdmin" class="acciones">
+            <button type="button" class="btn-accion btn-editar" (click)="abrirEditar(usuario)">Editar</button>
+            <button type="button" class="btn-accion btn-eliminar" [disabled]="usuario.id === miId" (click)="eliminar(usuario)">Eliminar</button>
           </td>
         </tr>
-
         <tr *ngIf="usuariosFiltrados.length === 0">
-          <td [attr.colspan]="esAdmin ? 5 : 4" class="no-data">
-            No se encontraron usuarios.
-          </td>
+          <td [attr.colspan]="esAdmin ? 5 : 4" class="no-data">No se encontraron usuarios.</td>
         </tr>
       </tbody>
     </table>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="modalAbierto" (click)="cerrarModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">  <p *ngIf="errorForm" class="error-banner">{{ errorForm }}</p>
+        <h2>{{ editando ? 'Editar usuario' : 'Nuevo usuario' }}</h2>
+  <form [formGroup]="form" (ngSubmit)="guardar()">
+    <div class="form-field">
+      <label for="nombre">Nombre completo</label>
+      <input id="nombre" formControlName="nombre" />
+      <small class="error-text" *ngIf="campoInvalido('nombre')">El nombre debe tener al menos 3 caracteres.</small>
+    </div>
+
+    <div class="form-field">
+      <label for="email">Correo</label>
+      <input id="email" type="email" formControlName="email" />
+      <small class="error-text" *ngIf="campoInvalido('email')">Ingresa un correo válido.</small>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label for="rol">Rol</label>
+        <select id="rol" formControlName="rol">
+          <option value="CIUDADANO">Ciudadano</option>
+          <option value="AUDITOR">Auditor</option>
+          <option value="ADMIN">Administrador</option>
+        </select>
+        <small class="text-muted" *ngIf="editando && editando.id === miId">No puedes cambiar tu propio rol.</small>
+      </div>
+      <div class="form-field">
+        <label for="password">{{ editando ? 'Nueva contraseña (opcional)' : 'Contraseña' }}</label>
+        <input id="password" type="password" formControlName="password" placeholder="••••••••" />
+        <small class="error-text" *ngIf="campoInvalido('password')">Mínimo 6 caracteres, con al menos una letra y un número.</small>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-cancelar" (click)="cerrarModal()">Cancelar</button>
+      <button type="submit" class="btn-nuevo" [disabled]="guardando">{{ guardando ? 'Guardando...' : 'Guardar' }}</button>
+    </div>
+  </form>
   </div>
 </div>

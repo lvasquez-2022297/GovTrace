@@ -4,18 +4,13 @@
       <h1>Directorio de Proveedores</h1>
       <p>Consulta la calificación y las adjudicaciones de las empresas contratistas del Estado.</p>
     </div>
+    <button *ngIf="esAdmin" type="button" class="btn-nuevo" (click)="abrirCrear()">+ Nuevo proveedor</button>
   </div>
 
   <div class="search-bar-card">
     <div class="search-input-wrapper">
-      <input
-        type="text"
-        placeholder="Buscar por NIT, razón social o correo..."
-        [(ngModel)]="searchTerm"
-        class="search-input"
-      />
+      <input type="text" placeholder="Buscar por NIT, razón social o correo..." [(ngModel)]="searchTerm" class="search-input" />
     </div>
-
     <div class="filter-group">
       <label>Calificación:</label>
       <select [(ngModel)]="calificacionFiltro" class="select-filter">
@@ -40,29 +35,67 @@
           <th class="text-center">CONTRATOS</th>
           <th class="text-right">TOTAL CONTRATADO</th>
           <th>CALIFICACIÓN</th>
+          <th *ngIf="esAdmin">ACCIONES</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of proveedoresFiltrados">
           <td class="font-mono"><strong>{{ item.nit }}</strong></td>
-          <td class="title-cell">{{ item.nombre }}</td>
+          <td class="title-cell">{{ item.razon_social }}</td>
           <td>{{ item.email }}</td>
-          <td class="text-center font-bold">{{ item.contratosAdjudicados }}</td>
-          <td class="text-right font-bold">Q{{ item.montoTotalContratado | number:'1.2-2' }}</td>
+          <td class="text-center font-bold">{{ item.contratos }}</td>
+          <td class="text-right font-bold">Q{{ item.monto_total | number:'1.2-2' }}</td>
           <td>
             <span class="status-badge" [ngClass]="{
               'badge-success': item.calificacion >= 4,
               'badge-warning': item.calificacion >= 2.5 && item.calificacion < 4,
               'badge-danger': item.calificacion < 2.5
-            }">
-              {{ item.calificacion | number:'1.1-2' }} / 5
-            </span>
+            }">{{ item.calificacion | number:'1.1-2' }} / 5</span>
+          </td>
+          <td *ngIf="esAdmin" class="acciones">
+            <button type="button" class="btn-accion btn-editar" (click)="abrirEditar(item)">Editar</button>
+            <button type="button" class="btn-accion btn-eliminar" (click)="eliminar(item)">Eliminar</button>
           </td>
         </tr>
         <tr *ngIf="proveedoresFiltrados.length === 0">
-          <td colspan="6" class="no-data">No se encontraron proveedores que coincidan con la búsqueda.</td>
+          <td [attr.colspan]="esAdmin ? 7 : 6" class="no-data">No se encontraron proveedores.</td>
         </tr>
       </tbody>
     </table>
   </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="modalAbierto" (click)="cerrarModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+        <h2>{{ editandoId ? 'Editar proveedor' : 'Nuevo proveedor' }}</h2>
+  <p *ngIf="errorForm" class="error-banner">{{ errorForm }}</p>
+  <form [formGroup]="form" (ngSubmit)="guardar()">
+    <div class="form-row">
+      <div class="form-field">
+        <label for="nit">NIT</label>
+        <input id="nit" formControlName="nit" placeholder="1234567-8" />
+        <small class="error-text" *ngIf="campoInvalido('nit')">El NIT es obligatorio.</small>
+      </div>
+      <div class="form-field">
+        <label for="calif">Calificación (0 a 5)</label>
+        <input id="calif" type="number" step="0.01" min="0" max="5" formControlName="calificacion" />
+        <small class="error-text" *ngIf="campoInvalido('calificacion')">Debe estar entre 0 y 5.</small>
+      </div>
+    </div>
+    <div class="form-field">
+      <label for="razon">Razón social</label>
+      <input id="razon" formControlName="razon_social" />
+      <small class="error-text" *ngIf="campoInvalido('razon_social')">La razón social es obligatoria.</small>
+    </div>
+    <div class="form-field">
+      <label for="correo">Correo</label>
+      <input id="correo" type="email" formControlName="email" />
+      <small class="error-text" *ngIf="campoInvalido('email')">Ingresa un correo válido.</small>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-cancelar" (click)="cerrarModal()">Cancelar</button>
+      <button type="submit" class="btn-nuevo" [disabled]="guardando">{{ guardando ? 'Guardando...' : 'Guardar' }}</button>
+    </div>
+  </form>
+</div>
 </div>

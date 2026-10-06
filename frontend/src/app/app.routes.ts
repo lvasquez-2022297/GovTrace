@@ -8,6 +8,7 @@ import { Proveedores } from './pages/proveedores/proveedores.component';
 import { Licitaciones } from './pages/licitaciones/licitaciones.component';
 import { Adjudicaciones } from './pages/adjudicaciones/adjudicaciones.component';
 import { Alertas } from './pages/alertas/alertas.component';
+import { Perfil } from './pages/perfil/perfil.component';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
 
@@ -17,6 +18,7 @@ export const routes: Routes = [
   { path: 'login', component: Login },
   { path: 'register', component: Register },
   { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
+  { path: 'perfil', component: Perfil, canActivate: [authGuard] },
   { path: 'usuarios', component: Usuarios, canActivate: [authGuard, roleGuard], data: { roles: ['ADMIN', 'AUDITOR'] } },
   { path: 'proveedores', component: Proveedores, canActivate: [authGuard] },
   { path: 'licitaciones', component: Licitaciones, canActivate: [authGuard] },

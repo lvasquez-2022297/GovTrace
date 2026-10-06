@@ -4,18 +4,13 @@
       <h1>Detección de Alertas y Anomalías</h1>
       <p>Identificación de sobrecostos, proveedores inhabilitados y patrones irregulares.</p>
     </div>
+    <button *ngIf="esAdmin" type="button" class="btn-nuevo" (click)="abrirCrear()">+ Nueva alerta</button>
   </div>
 
   <div class="search-bar-card">
     <div class="search-input-wrapper">
-      <input
-        type="text"
-        placeholder="Buscar por código, descripción o institución..."
-        [(ngModel)]="searchTerm"
-        class="search-input"
-      />
+      <input type="text" placeholder="Buscar por código, descripción o institución..." [(ngModel)]="searchTerm" class="search-input" />
     </div>
-
     <div class="filter-group">
       <label>Riesgo:</label>
       <select [(ngModel)]="riesgoFiltro" class="select-filter">
@@ -38,36 +33,82 @@
           <th>CÓDIGO</th>
           <th>PROCESO AUDITADO</th>
           <th>INSTITUCIÓN</th>
-          <th>TIPO DE ANOMALÍA</th>
+          <th>TIPO</th>
           <th>DESCRIPCIÓN</th>
           <th>RIESGO</th>
           <th>FECHA</th>
+          <th *ngIf="esAdmin">ACCIONES</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of alertasFiltradas">
-          <td class="font-mono"><strong>{{ item.nog }}</strong></td>
-          <td class="title-cell">{{ item.tituloLicitacion }}</td>
-          <td>{{ item.entidad }}</td>
-          <td>
-            <span class="anomaly-tag">{{ item.tipoAlerta.split('_').join(' ') }}</span>
-          </td>
+          <td class="font-mono"><strong>{{ item.codigo_licitacion }}</strong></td>
+          <td class="title-cell">{{ item.titulo }}</td>
+          <td>{{ item.entidad || 'Sin entidad' }}</td>
+          <td><span class="anomaly-tag">{{ item.tipo_alerta.split('_').join(' ') }}</span></td>
           <td>{{ item.descripcion }}</td>
           <td>
             <span class="status-badge" [ngClass]="{
-              'badge-danger': item.nivelRiesgo === 'ALTO' || item.nivelRiesgo === 'CRITICO',
-              'badge-warning': item.nivelRiesgo === 'MEDIO',
-              'badge-success': item.nivelRiesgo === 'BAJO'
-            }">
-              {{ item.nivelRiesgo }}
-            </span>
+              'badge-danger': item.nivel_riesgo === 'ALTO' || item.nivel_riesgo === 'CRITICO',
+              'badge-warning': item.nivel_riesgo === 'MEDIO',
+              'badge-success': item.nivel_riesgo === 'BAJO'
+            }">{{ item.nivel_riesgo }}</span>
           </td>
-          <td class="text-muted">{{ item.fechaDeteccion | date:'dd/MM/yyyy' }}</td>
+          <td class="text-muted">{{ item.creado_en | date:'dd/MM/yyyy' }}</td>
+          <td *ngIf="esAdmin" class="acciones">
+            <button type="button" class="btn-accion btn-editar" (click)="abrirEditar(item)">Editar</button>
+            <button type="button" class="btn-accion btn-eliminar" (click)="eliminar(item)">Eliminar</button>
+          </td>
         </tr>
         <tr *ngIf="alertasFiltradas.length === 0">
-          <td colspan="7" class="no-data">No se encontraron alertas coincidentes.</td>
+          <td [attr.colspan]="esAdmin ? 8 : 7" class="no-data">No se encontraron alertas.</td>
         </tr>
       </tbody>
     </table>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="modalAbierto" (click)="cerrarModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">  <p *ngIf="errorForm" class="error-banner">{{ errorForm }}</p>
+        <h2>{{ editandoId ? 'Editar alerta' : 'Nueva alerta' }}</h2>
+  <form [formGroup]="form" (ngSubmit)="guardar()">
+    <div class="form-field">
+      <label for="lic">Licitación</label>
+      <select id="lic" formControlName="licitacion_id">
+        <option [ngValue]="null" disabled>Selecciona una licitación</option>
+        <option *ngFor="let l of licitaciones" [ngValue]="l.id">{{ l.codigo_licitacion }} · {{ l.titulo }}</option>
+      </select>
+      <small class="error-text" *ngIf="campoInvalido('licitacion_id')">Selecciona una licitación.</small>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label for="tipo">Tipo de alerta</label>
+        <select id="tipo" formControlName="tipo_alerta">
+          <option *ngFor="let t of tipos" [value]="t.valor">{{ t.texto }}</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="nivel">Nivel de riesgo</label>
+        <select id="nivel" formControlName="nivel_riesgo">
+          <option value="BAJO">Bajo</option>
+          <option value="MEDIO">Medio</option>
+          <option value="ALTO">Alto</option>
+          <option value="CRITICO">Crítico</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label for="desc">Descripción</label>
+      <textarea id="desc" rows="4" formControlName="descripcion" placeholder="Describe la posible irregularidad detectada..."></textarea>
+      <small class="error-text" *ngIf="campoInvalido('descripcion')">La descripción es obligatoria (máx. 500 caracteres).</small>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-cancelar" (click)="cerrarModal()">Cancelar</button>
+      <button type="submit" class="btn-nuevo" [disabled]="guardando">{{ guardando ? 'Guardando...' : 'Guardar' }}</button>
+    </div>
+  </form>
   </div>
 </div>
