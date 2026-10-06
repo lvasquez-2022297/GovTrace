@@ -26,6 +26,12 @@ export class AlertasService {
     return await this.repo.obtenerTodas();
   }
 
+  async obtenerAlertaPorId(id: number) {
+  const a = await this.repo.obtenerPorId(id);
+  if (!a) throw new AppError(`Alerta con ID ${id} no encontrada.`, 404);
+  return a;
+ }
+
   async registrarAlerta(datos: any) {
     return await this.repo.crear(await this.validar(datos));
   }
