@@ -1,14 +1,14 @@
 insert into usuarios (nombre, email, password, rol) values
-('Carlos Mendoza', 'admin.mendoza@govtrace.gob', '$2b$10$e834jdfh834jhf834jhf83', 'ADMIN'),
-('Lucía Morales', 'lmorales@auditoria.gob', '$2b$10$e834jdfh834jhf834jhf84', 'AUDITOR'),
-('Pedro Vásquez', 'pedro.vasquez@email.com', '$2b$10$e834jdfh834jhf834jhf85', 'CIUDADANO'),
-('Ana Sofía Gómez', 'agomez@salud.gob', '$2b$10$e834jdfh834jhf834jhf86', 'ADMIN'),
-('Roberto Arenas', 'rarenas@contraloria.gob', '$2b$10$e834jdfh834jhf834jhf87', 'AUDITOR'),
-('María Fernanda Castillo', 'mfcastillo@email.com', '$2b$10$e834jdfh834jhf834jhf88', 'CIUDADANO'),
-('Jorge Luis Estrada', 'jestrada@comunicaciones.gob', '$2b$10$e834jdfh834jhf834jhf89', 'ADMIN'),
-('Karla Vanessa Ruiz', 'kruiz@transparencia.org', '$2b$10$e834jdfh834jhf834jhf90', 'AUDITOR'),
-('Diego Alejandro Santos', 'dsantos@email.com', '$2b$10$e834jdfh834jhf834jhf91', 'CIUDADANO'),
-('Elena Beatriz Fuentes', 'efuentes@educacion.gob', '$2b$10$e834jdfh834jhf834jhf92', 'ADMIN');
+('Carlos Mendoza', 'admin.mendoza@govtrace.gob', '$2b$10$H.VoTqyv729zWZ3mlBG51ewvLdOXBh9sYnd4xEJXPdXz6fw9UZxiO', 'ADMIN'),
+('Lucía Morales', 'lmorales@auditoria.gob', '$2b$10$H.VoTqyv729zWZ3mlBG51ewvLdOXBh9sYnd4xEJXPdXz6fw9UZxiO', 'AUDITOR'),
+('Pedro Vásquez', 'pedro.vasquez@email.com', '$2b$10$H.VoTqyv729zWZ3mlBG51ewvLdOXBh9sYnd4xEJXPdXz6fw9UZxiO', 'CIUDADANO'),
+('Ana Sofía Gómez', 'agomez@salud.gob', '$2b$10$H.VoTqyv729zWZ3mlBG51ewvLdOXBh9sYnd4xEJXPdXz6fw9UZxiO', 'ADMIN'),
+('Roberto Arenas', 'rarenas@contraloria.gob', '$2b$10$H.VoTqyv729zWZ3mlBG51ewvLdOXBh9sYnd4xEJXPdXz6fw9UZxiO', 'AUDITOR'),
+('María Fernanda Castillo', 'mfcastillo@email.com', '$2b$10$H.VoTqyv729zWZ3mlBG51ewvLdOXBh9sYnd4xEJXPdXz6fw9UZxiO', 'CIUDADANO'),
+('Jorge Luis Estrada', 'jestrada@comunicaciones.gob', '$2b$10$H.VoTqyv729zWZ3mlBG51ewvLdOXBh9sYnd4xEJXPdXz6fw9UZxiO', 'ADMIN'),
+('Karla Vanessa Ruiz', 'kruiz@transparencia.org', '$2b$10$H.VoTqyv729zWZ3mlBG51ewvLdOXBh9sYnd4xEJXPdXz6fw9UZxiO', 'AUDITOR'),
+('Diego Alejandro Santos', 'dsantos@email.com', '$2b$10$H.VoTqyv729zWZ3mlBG51ewvLdOXBh9sYnd4xEJXPdXz6fw9UZxiO', 'CIUDADANO'),
+('Elena Beatriz Fuentes', 'efuentes@educacion.gob', '$2b$10$H.VoTqyv729zWZ3mlBG51ewvLdOXBh9sYnd4xEJXPdXz6fw9UZxiO', 'ADMIN');
 
 insert into proveedores (nit, razon_social, email, calificacion) values
 ('1234567-8', 'TechGuate S.A.', 'contacto@techguate.com', 4.85),
@@ -22,17 +22,17 @@ insert into proveedores (nit, razon_social, email, calificacion) values
 ('2581473-9', 'Infraestructura Cívica S.A.', 'proyectos@infracivica.com', 3.90),
 ('9517532-8', 'Servicios de Logística e Impreza', 'logistica@impreza.com', 4.70);
 
-insert into licitaciones (codigo_licitacion, titulo, descripcion, presupuesto_asignado, estado, fecha_inicio, fecha_cierre, creado_por) values
-('LIC-2026-001', 'Adquisición de Equipos de Cómputo para Escuelas', 'Compra de 500 computadoras portátiles para escuelas públicas.', 150000.00, 'ADJUDICADA', '2026-09-01', '2026-09-15', 1),
-('LIC-2026-002', 'Compra de Lote de Mascarillas y Equipo Médico', 'Insumos de protección para la red nacional de hospitales.', 850000.00, 'CON_ALERTA', '2026-09-10', '2026-09-25', 4),
-('LIC-2026-003', 'Reparación de Puente Vehicular Km 45', 'Mantenimiento estructural y pavimentación de tramo.', 2500000.00, 'ADJUDICADA', '2026-08-18', '2026-09-10', 7),
-('LIC-2026-004', 'Instalación de Fibra Óptica en Ministerios', 'Cableado estructurado y conectividad de alta velocidad.', 420000.00, 'ADJUDICADA', '2026-08-01', '2026-08-20', 1),
-('LIC-2026-005', 'Suministro de Libros de Texto para Primaria', 'Impresión y distribución de 50,000 textos escolares.', 600000.00, 'ADJUDICADA', '2026-07-15', '2026-08-05', 10),
-('LIC-2026-006', 'Mantenimiento de Ambulancias de la Red Sur', 'Reparación mecánica y equipamiento de emergencia.', 310000.00, 'CON_ALERTA', '2026-09-05', '2026-09-20', 4),
-('LIC-2026-007', 'Construcción de Paso a Desnivel Zona Central', 'Obra civil de infraestructura vial.', 8900000.00, 'PUBLICADA', '2026-09-15', '2026-10-30', 7),
-('LIC-2026-008', 'Servicio de Licenciamiento de Software Cloud', 'Renovación de licencias para servidores gubernamentales.', 280000.00, 'ADJUDICADA', '2026-08-10', '2026-08-28', 1),
-('LIC-2026-009', 'Adquisición de Insumos Quirúrgicos', 'Material estéril para salas de operaciones.', 1200000.00, 'CON_ALERTA', '2026-09-12', '2026-09-28', 4),
-('LIC-2026-010', 'Remozamiento de Aulas Escolares en Sector Rural', 'Pintura, techo y electricidad en 20 centros educativos.', 550000.00, 'CANCELADA', '2026-07-01', '2026-07-20', 10);
+insert into licitaciones (codigo_licitacion, titulo, descripcion, entidad, presupuesto_asignado, estado, fecha_inicio, fecha_cierre, creado_por) values
+('LIC-2026-001', 'Adquisición de Equipos de Cómputo para Escuelas', 'Compra de 500 computadoras portátiles para escuelas públicas.', 'Ministerio de Educación', 150000.00, 'ADJUDICADA', '2026-09-01', '2026-09-15', 1),
+('LIC-2026-002', 'Compra de Lote de Mascarillas y Equipo Médico', 'Insumos de protección para la red nacional de hospitales.', 'Ministerio de Salud Pública', 850000.00, 'CON_ALERTA', '2026-09-10', '2026-09-25', 4),
+('LIC-2026-003', 'Reparación de Puente Vehicular Km 45', 'Mantenimiento estructural y pavimentación de tramo.', 'Ministerio de Comunicaciones', 2500000.00, 'ADJUDICADA', '2026-08-18', '2026-09-10', 7),
+('LIC-2026-004', 'Instalación de Fibra Óptica en Ministerios', 'Cableado estructurado y conectividad de alta velocidad.', 'Ministerio de Finanzas', 420000.00, 'ADJUDICADA', '2026-08-01', '2026-08-20', 1),
+('LIC-2026-005', 'Suministro de Libros de Texto para Primaria', 'Impresión y distribución de 50,000 textos escolares.', 'Ministerio de Educación', 600000.00, 'ADJUDICADA', '2026-07-15', '2026-08-05', 10),
+('LIC-2026-006', 'Mantenimiento de Ambulancias de la Red Sur', 'Reparación mecánica y equipamiento de emergencia.', 'Ministerio de Salud Pública', 310000.00, 'CON_ALERTA', '2026-09-05', '2026-09-20', 4),
+('LIC-2026-007', 'Construcción de Paso a Desnivel Zona Central', 'Obra civil de infraestructura vial.', 'Ministerio de Comunicaciones', 8900000.00, 'PUBLICADA', '2026-09-15', '2026-10-30', 7),
+('LIC-2026-008', 'Servicio de Licenciamiento de Software Cloud', 'Renovación de licencias para servidores gubernamentales.', 'Ministerio de Finanzas', 280000.00, 'ADJUDICADA', '2026-08-10', '2026-08-28', 1),
+('LIC-2026-009', 'Adquisición de Insumos Quirúrgicos', 'Material estéril para salas de operaciones.', 'Ministerio de Salud Pública', 1200000.00, 'CON_ALERTA', '2026-09-12', '2026-09-28', 4),
+('LIC-2026-010', 'Remozamiento de Aulas Escolares en Sector Rural', 'Pintura, techo y electricidad en 20 centros educativos.', 'Ministerio de Educación', 550000.00, 'CANCELADA', '2026-07-01', '2026-07-20', 10);
 
 insert into adjudicaciones (licitacion_id, proveedor_id, monto_adjudicado, observaciones) values
 (1, 1, 145000.00, 'Asignado a TechGuate S.A. por menor costo y garantía extendida de 3 años.'),

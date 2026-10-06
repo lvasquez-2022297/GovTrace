@@ -1,4 +1,4 @@
-import { UsuariosRepository, UsuarioSinPassword } from '../data/UsuariosRepository';
+import { UsuariosRepository, UsuarioSinPassword, CambiosUsuario } from '../data/UsuariosRepository';
 import { Usuario, RolUsuario } from '../models/Usuarios';
 import { CryptoUtils } from '../utils/CryptoUtils';
 import { JwtUtils } from '../utils/JwtUtils';
@@ -125,7 +125,6 @@ export class UsuariosService {
 
     const usuario = await this.repo.obtenerPorEmail(emailNormalizado);
 
-    // Mismo mensaje si el correo no existe o la clave es incorrecta
     const credencialesInvalidas = new AppError('Correo o contraseña incorrectos.', 401);
     if (!usuario) throw credencialesInvalidas;
 
@@ -141,37 +140,53 @@ export class UsuariosService {
   }
 
   async actualizarUsuario(id: number, datos: Partial<Usuario>): Promise<UsuarioPublico> {
-    const cambios: { nombre?: string; email?: string; password?: string } = {};
+  const cambios: CambiosUsuario = {};
 
-    if (datos.nombre !== undefined) {
-      const nombre = datos.nombre.trim();
-      if (nombre.length < 3) {
-        throw new AppError('El nombre debe tener al menos 3 caracteres.', 400);
-      }
-      cambios.nombre = nombre;
+  if (datos.nombre !== undefined) {
+    const nombre = datos.nombre.trim();
+    if (nombre.length < 3) {
+      throw new AppError('El nombre debe tener al menos 3 caracteres.', 400);
     }
-
-    if (datos.email !== undefined) {
-      const email = datos.email.trim().toLowerCase();
-      if (!this.validarFormatoEmail(email)) {
-        throw new AppError(`El formato del correo '${email}' es inválido.`, 400);
-      }
-      const existente = await this.repo.obtenerPorEmail(email);
-      if (existente && existente.id !== id) {
-        throw new AppError(`El correo ${email} ya se encuentra registrado.`, 409);
-      }
-      cambios.email = email;
-    }
-
-    if (datos.password !== undefined) {
-      this.validarPassword(datos.password);
-      cambios.password = await CryptoUtils.hashPassword(datos.password);
-    }
-
-    const actualizado = await this.repo.actualizar(id, cambios);
-    if (!actualizado) throw new AppError(`Usuario con ID ${id} no encontrado.`, 404);
-    return actualizado;
+    cambios.nombre = nombre;
   }
+
+  if (datos.email !== undefined) {
+    const email = datos.email.trim().toLowerCase();
+    if (!this.validarFormatoEmail(email)) {
+      throw new AppError(`El formato del correo '${email}' es inválido.`, 400);
+    }
+    const existente = await this.repo.obtenerPorEmail(email);
+    if (existente && existente.id !== id) {
+      throw new AppError(`El correo ${email} ya se encuentra registrado.`, 409);
+    }
+    cambios.email = email;
+  }
+
+  if (datos.password !== undefined) {
+    this.validarPassword(datos.password);
+    cambios.password = await CryptoUtils.hashPassword(datos.password);
+  }
+
+  if (datos.foto_url !== undefined) {
+    const url = (datos.foto_url ?? '').trim();
+    if (!url) {
+      cambios.foto_url = null; 
+    } else {
+      if (url.length > 500) throw new AppError('La URL de la foto es demasiado larga (máx. 500).', 400);
+      let valida = false;
+      try {
+        const u = new URL(url);
+        valida = u.protocol === 'http:' || u.protocol === 'https:';
+      } catch { /* queda en false */ }
+      if (!valida) throw new AppError('La foto debe ser una URL válida que empiece con http:// o https://.', 400);
+      cambios.foto_url = url;
+    }
+  }
+
+  const actualizado = await this.repo.actualizar(id, cambios);
+  if (!actualizado) throw new AppError(`Usuario con ID ${id} no encontrado.`, 404);
+  return actualizado;
+}
 
   async cambiarRol(id: number, rol: RolUsuario): Promise<UsuarioPublico> {
     if (!ROLES_VALIDOS.includes(rol)) {

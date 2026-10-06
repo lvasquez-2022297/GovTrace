@@ -1,70 +1,60 @@
 import { pool } from '../db';
-import { Licitacion } from '../models/Licitaciones';
 
-export type CreacionLicitacion = Omit<Licitacion, 'id' | 'creado_en'>;
+export type EstadoLicitacion = 'PUBLICADA' | 'ADJUDICADA' | 'CANCELADA' | 'CON_ALERTA';
+
+export interface LicitacionDatos {
+  codigo_licitacion: string;
+  titulo: string;
+  descripcion: string | null;
+  entidad: string | null;
+  presupuesto_asignado: number;
+  estado: EstadoLicitacion;
+  fecha_inicio: string;
+  fecha_cierre: string;
+  creado_por?: number | null;
+}
+
+const COLUMNAS = `
+  id, codigo_licitacion, titulo, descripcion, entidad,
+  presupuesto_asignado::float8 AS presupuesto_asignado, estado,
+  to_char(fecha_inicio, 'YYYY-MM-DD') AS fecha_inicio,
+  to_char(fecha_cierre, 'YYYY-MM-DD') AS fecha_cierre,
+  creado_por, creado_en`;
 
 export class LicitacionesRepository {
-  async obtenerTodas(): Promise<Licitacion[]> {
-    const res = await pool.query('SELECT * FROM licitaciones ORDER BY id DESC');
+  async obtenerTodas() {
+    const res = await pool.query(`SELECT ${COLUMNAS} FROM licitaciones ORDER BY id DESC`);
     return res.rows;
   }
 
-  async obtenerPorId(id: number): Promise<Licitacion | null> {
-    const res = await pool.query('SELECT * FROM licitaciones WHERE id = $1', [id]);
+  async obtenerPorId(id: number) {
+    const res = await pool.query(`SELECT ${COLUMNAS} FROM licitaciones WHERE id = $1`, [id]);
     return res.rows[0] || null;
   }
 
-  async obtenerPorCodigo(codigo: string): Promise<Licitacion | null> {
-    const res = await pool.query('SELECT * FROM licitaciones WHERE codigo_licitacion = $1', [codigo]);
-    return res.rows[0] || null;
-  }
-
-  async crear(licitacion: CreacionLicitacion): Promise<Licitacion> {
+  async crear(d: LicitacionDatos) {
     const res = await pool.query(
-      `INSERT INTO licitaciones (codigo_licitacion, titulo, descripcion, presupuesto_asignado, estado, fecha_inicio, fecha_cierre, creado_por)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING *`,
-      [
-        licitacion.codigo_licitacion,
-        licitacion.titulo,
-        licitacion.descripcion,
-        licitacion.presupuesto_asignado,
-        licitacion.estado ?? 'Publicada',
-        licitacion.fecha_inicio,
-        licitacion.fecha_cierre,
-        licitacion.creado_por,
-      ]
+      `INSERT INTO licitaciones
+        (codigo_licitacion, titulo, descripcion, entidad, presupuesto_asignado, estado, fecha_inicio, fecha_cierre, creado_por)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       RETURNING ${COLUMNAS}`,
+      [d.codigo_licitacion, d.titulo, d.descripcion, d.entidad, d.presupuesto_asignado,
+       d.estado, d.fecha_inicio, d.fecha_cierre, d.creado_por ?? null]
     );
     return res.rows[0];
   }
 
-  async actualizar(id: number, licitacion: Partial<Licitacion>): Promise<Licitacion | null> {
+  async actualizar(id: number, d: LicitacionDatos) {
     const res = await pool.query(
       `UPDATE licitaciones
-       SET titulo = COALESCE($1, titulo),
-           descripcion = COALESCE($2, descripcion),
-           presupuesto_asignado = COALESCE($3, presupuesto_asignado),
-           estado = COALESCE($4, estado),
-           fecha_inicio = COALESCE($5, fecha_inicio),
-           fecha_cierre = COALESCE($6, fecha_cierre)
-       WHERE id = $7
-       RETURNING *`,
-      [
-        licitacion.titulo,
-        licitacion.descripcion,
-        licitacion.presupuesto_asignado,
-        licitacion.estado,
-        licitacion.fecha_inicio,
-        licitacion.fecha_cierre,
-        id,
-      ]
+       SET codigo_licitacion=$1, titulo=$2, descripcion=$3, entidad=$4,
+           presupuesto_asignado=$5, estado=$6, fecha_inicio=$7, fecha_cierre=$8
+       WHERE id=$9
+       RETURNING ${COLUMNAS}`,
+      [d.codigo_licitacion, d.titulo, d.descripcion, d.entidad, d.presupuesto_asignado,
+       d.estado, d.fecha_inicio, d.fecha_cierre, id]
     );
     return res.rows[0] || null;
-  }
-
-  async actualizarEstado(id: number, estado: string): Promise<boolean> {
-    const res = await pool.query('UPDATE licitaciones SET estado = $1 WHERE id = $2', [estado, id]);
-    return (res.rowCount ?? 0) > 0;
   }
 
   async eliminar(id: number): Promise<boolean> {

@@ -4,12 +4,14 @@ drop table if exists licitaciones cascade;
 drop table if exists proveedores cascade;
 drop table if exists usuarios cascade;
 
+
 create table usuarios (
     id serial primary key,
     nombre varchar(100) not null,
     email varchar(120) unique not null,
-    password varchar(255) not null, 
-    rol varchar(30) default 'CIUDADANO' check (rol in ('ADMIN', 'AUDITOR', 'CIUDADANO')),
+    password varchar(255) not null,
+    rol varchar(30) not null default 'CIUDADANO' check (rol in ('ADMIN', 'AUDITOR', 'CIUDADANO')),
+    foto_url varchar(500),
     creado_en timestamp default current_timestamp
 );
 

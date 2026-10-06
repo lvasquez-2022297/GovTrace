@@ -1,46 +1,47 @@
 import { pool } from '../db';
-import { Proveedor } from '../models/Proveedores';
 
-export type CreacionProveedor = Omit<Proveedor, 'id' | 'creado_en'>;
+export interface ProveedorDatos {
+  nit: string;
+  razon_social: string;
+  email: string;
+  calificacion: number;
+}
+
+const BASE = `
+  SELECT p.id, p.nit, p.razon_social, p.email,
+         p.calificacion::float8 AS calificacion, p.creado_en,
+         COUNT(a.id)::int AS contratos,
+         COALESCE(SUM(a.monto_adjudicado), 0)::float8 AS monto_total
+  FROM proveedores p
+  LEFT JOIN adjudicaciones a ON a.proveedor_id = p.id`;
 
 export class ProveedoresRepository {
-  async obtenerTodos(): Promise<Proveedor[]> {
-    const res = await pool.query('SELECT * FROM proveedores ORDER BY id ASC');
+  async obtenerTodos() {
+    const res = await pool.query(`${BASE} GROUP BY p.id ORDER BY p.id DESC`);
     return res.rows;
   }
 
-  async obtenerPorId(id: number): Promise<Proveedor | null> {
-    const res = await pool.query('SELECT * FROM proveedores WHERE id = $1', [id]);
+  async obtenerPorId(id: number) {
+    const res = await pool.query(`${BASE} WHERE p.id = $1 GROUP BY p.id`, [id]);
     return res.rows[0] || null;
   }
 
-  async obtenerPorNit(nit: string): Promise<Proveedor | null> {
-    const res = await pool.query('SELECT * FROM proveedores WHERE nit = $1', [nit]);
-    return res.rows[0] || null;
-  }
-
-  async crear(proveedor: CreacionProveedor): Promise<Proveedor> {
+  async crear(d: ProveedorDatos) {
     const res = await pool.query(
       `INSERT INTO proveedores (nit, razon_social, email, calificacion)
-       VALUES ($1, $2, $3, $4)
-       RETURNING *`,
-      [proveedor.nit, proveedor.razon_social, proveedor.email, proveedor.calificacion ?? 5.0]
+       VALUES ($1,$2,$3,$4) RETURNING id`,
+      [d.nit, d.razon_social, d.email, d.calificacion]
     );
-    return res.rows[0];
+    return this.obtenerPorId(res.rows[0].id);
   }
 
-  async actualizar(id: number, proveedor: Partial<Proveedor>): Promise<Proveedor | null> {
+  async actualizar(id: number, d: ProveedorDatos) {
     const res = await pool.query(
-      `UPDATE proveedores
-       SET nit = COALESCE($1, nit),
-           razon_social = COALESCE($2, razon_social),
-           email = COALESCE($3, email),
-           calificacion = COALESCE($4, calificacion)
-       WHERE id = $5
-       RETURNING *`,
-      [proveedor.nit, proveedor.razon_social, proveedor.email, proveedor.calificacion, id]
+      `UPDATE proveedores SET nit=$1, razon_social=$2, email=$3, calificacion=$4
+       WHERE id=$5 RETURNING id`,
+      [d.nit, d.razon_social, d.email, d.calificacion, id]
     );
-    return res.rows[0] || null;
+    return res.rows[0] ? this.obtenerPorId(id) : null;
   }
 
   async eliminar(id: number): Promise<boolean> {

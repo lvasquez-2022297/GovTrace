@@ -1,48 +1,74 @@
 import { pool } from '../db';
-import { Adjudicacion } from '../models/Adjudicaciones';
 
-export type CreacionAdjudicacion = Omit<Adjudicacion, 'id' | 'fecha_adjudicacion'>;
+export interface AdjudicacionDatos {
+  licitacion_id: number;
+  proveedor_id: number;
+  monto_adjudicado: number;
+  observaciones: string | null;
+}
+
+const BASE = `
+  SELECT a.id, a.licitacion_id, a.proveedor_id,
+         a.monto_adjudicado::float8 AS monto_adjudicado,
+         a.fecha_adjudicacion, a.observaciones,
+         l.codigo_licitacion, l.titulo, l.entidad,
+         l.estado AS estado_licitacion,
+         l.presupuesto_asignado::float8 AS presupuesto_asignado,
+         p.razon_social, p.nit
+  FROM adjudicaciones a
+  JOIN licitaciones l ON l.id = a.licitacion_id
+  JOIN proveedores p ON p.id = a.proveedor_id`;
 
 export class AdjudicacionesRepository {
-  async obtenerTodas(): Promise<Adjudicacion[]> {
-    const res = await pool.query('SELECT * FROM adjudicaciones ORDER BY id DESC');
+  async obtenerTodas() {
+    const res = await pool.query(`${BASE} ORDER BY a.id DESC`);
     return res.rows;
   }
 
-  async obtenerPorId(id: number): Promise<Adjudicacion | null> {
-    const res = await pool.query('SELECT * FROM adjudicaciones WHERE id = $1', [id]);
+  async obtenerPorId(id: number) {
+    const res = await pool.query(`${BASE} WHERE a.id = $1`, [id]);
     return res.rows[0] || null;
   }
 
-  async obtenerPorLicitacionId(licitacionId: number): Promise<Adjudicacion | null> {
-    const res = await pool.query('SELECT * FROM adjudicaciones WHERE licitacion_id = $1', [licitacionId]);
-    return res.rows[0] || null;
+  async estadoLicitacion(id: number): Promise<string | null> {
+    const res = await pool.query('SELECT estado FROM licitaciones WHERE id = $1', [id]);
+    return res.rows[0]?.estado ?? null;
   }
 
-  async crear(adjudicacion: CreacionAdjudicacion): Promise<Adjudicacion> {
+  async existeProveedor(id: number): Promise<boolean> {
+    const res = await pool.query('SELECT 1 FROM proveedores WHERE id = $1', [id]);
+    return (res.rowCount ?? 0) > 0;
+  }
+
+  async crear(d: AdjudicacionDatos) {
     const res = await pool.query(
       `INSERT INTO adjudicaciones (licitacion_id, proveedor_id, monto_adjudicado, observaciones)
-       VALUES ($1, $2, $3, $4)
-       RETURNING *`,
-      [adjudicacion.licitacion_id, adjudicacion.proveedor_id, adjudicacion.monto_adjudicado, adjudicacion.observaciones]
+       VALUES ($1,$2,$3,$4) RETURNING id`,
+      [d.licitacion_id, d.proveedor_id, d.monto_adjudicado, d.observaciones]
     );
-    return res.rows[0];
+    await pool.query(
+      `UPDATE licitaciones SET estado = 'ADJUDICADA' WHERE id = $1 AND estado = 'PUBLICADA'`,
+      [d.licitacion_id]
+    );
+    return this.obtenerPorId(res.rows[0].id);
   }
 
-  async actualizar(id: number, adjudicacion: Partial<Adjudicacion>): Promise<Adjudicacion | null> {
+  async actualizar(id: number, d: Omit<AdjudicacionDatos, 'licitacion_id'>) {
     const res = await pool.query(
-      `UPDATE adjudicaciones
-       SET monto_adjudicado = COALESCE($1, monto_adjudicado),
-           observaciones = COALESCE($2, observaciones)
-       WHERE id = $3
-       RETURNING *`,
-      [adjudicacion.monto_adjudicado, adjudicacion.observaciones, id]
+      `UPDATE adjudicaciones SET proveedor_id=$1, monto_adjudicado=$2, observaciones=$3
+       WHERE id=$4 RETURNING id`,
+      [d.proveedor_id, d.monto_adjudicado, d.observaciones, id]
     );
-    return res.rows[0] || null;
+    return res.rows[0] ? this.obtenerPorId(id) : null;
   }
 
   async eliminar(id: number): Promise<boolean> {
-    const res = await pool.query('DELETE FROM adjudicaciones WHERE id = $1', [id]);
-    return (res.rowCount ?? 0) > 0;
+    const res = await pool.query('DELETE FROM adjudicaciones WHERE id = $1 RETURNING licitacion_id', [id]);
+    if (!res.rows[0]) return false;
+    await pool.query(
+      `UPDATE licitaciones SET estado = 'PUBLICADA' WHERE id = $1 AND estado = 'ADJUDICADA'`,
+      [res.rows[0].licitacion_id]
+    );
+    return true;
   }
 }

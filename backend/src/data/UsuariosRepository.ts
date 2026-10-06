@@ -3,23 +3,26 @@ import { Usuario } from '../models/Usuarios';
 
 export type UsuarioSinPassword = Omit<Usuario, 'password'>;
 
+const COLUMNAS = 'id, nombre, email, rol, foto_url, creado_en';
+
+export interface CambiosUsuario {
+  nombre?: string;
+  email?: string;
+  password?: string;
+  foto_url?: string | null; 
+}
+
 export class UsuariosRepository {
   async obtenerTodos(): Promise<UsuarioSinPassword[]> {
-    const res = await pool.query(
-      'SELECT id, nombre, email, rol, creado_en FROM usuarios ORDER BY id ASC'
-    );
+    const res = await pool.query(`SELECT ${COLUMNAS} FROM usuarios ORDER BY id ASC`);
     return res.rows;
   }
 
   async obtenerPorId(id: number): Promise<UsuarioSinPassword | null> {
-    const res = await pool.query(
-      'SELECT id, nombre, email, rol, creado_en FROM usuarios WHERE id = $1',
-      [id]
-    );
+    const res = await pool.query(`SELECT ${COLUMNAS} FROM usuarios WHERE id = $1`, [id]);
     return res.rows[0] || null;
   }
 
-  // Única consulta que devuelve password: la necesita el login
   async obtenerPorEmail(email: string): Promise<Usuario | null> {
     const res = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
     return res.rows[0] || null;
@@ -29,33 +32,37 @@ export class UsuariosRepository {
     const res = await pool.query(
       `INSERT INTO usuarios (nombre, email, password, rol)
        VALUES ($1, $2, $3, $4)
-       RETURNING id, nombre, email, rol, creado_en`,
+       RETURNING ${COLUMNAS}`,
       [usuario.nombre, usuario.email, usuario.password, usuario.rol]
     );
     return res.rows[0];
   }
 
-  // El rol NO se actualiza aquí: para eso existe actualizarRol
-  async actualizar(
-    id: number,
-    cambios: Partial<Pick<Usuario, 'nombre' | 'email' | 'password'>>
-  ): Promise<UsuarioSinPassword | null> {
+  async actualizar(id: number, cambios: CambiosUsuario): Promise<UsuarioSinPassword | null> {
+    const cambiaFoto = cambios.foto_url !== undefined;
     const res = await pool.query(
       `UPDATE usuarios
        SET nombre   = COALESCE($1, nombre),
            email    = COALESCE($2, email),
-           password = COALESCE($3, password)
-       WHERE id = $4
-       RETURNING id, nombre, email, rol, creado_en`,
-      [cambios.nombre ?? null, cambios.email ?? null, cambios.password ?? null, id]
+           password = COALESCE($3, password),
+           foto_url = CASE WHEN $4::boolean THEN $5::varchar ELSE foto_url END
+       WHERE id = $6
+       RETURNING ${COLUMNAS}`,
+      [
+        cambios.nombre ?? null,
+        cambios.email ?? null,
+        cambios.password ?? null,
+        cambiaFoto,
+        cambios.foto_url ?? null,
+        id
+      ]
     );
     return res.rows[0] || null;
   }
 
   async actualizarRol(id: number, rol: string): Promise<UsuarioSinPassword | null> {
     const res = await pool.query(
-      `UPDATE usuarios SET rol = $1 WHERE id = $2
-       RETURNING id, nombre, email, rol, creado_en`,
+      `UPDATE usuarios SET rol = $1 WHERE id = $2 RETURNING ${COLUMNAS}`,
       [rol, id]
     );
     return res.rows[0] || null;
