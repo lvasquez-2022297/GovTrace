@@ -29,6 +29,39 @@
     </div>
   </section>
 
+  <section class="analyzer-section">
+    <div class="section-header">
+      <h2>Analizador Automático de Riesgos</h2>
+      <p>Estado del proceso que detecta sobrecostos, tiempos irregulares y proveedores de riesgo.</p>
+    </div>
+
+    <div class="analyzer-card">
+      <div class="analyzer-status">
+        <span class="status-label">Estado:</span>
+        <strong *ngIf="analizadorStatus">{{ analizadorStatus.isRunning ? 'En ejecución' : 'Inactivo' }}</strong>
+        <span *ngIf="analizadorStatus && analizadorStatus.lastRun" class="status-last">(última: {{ analizadorStatus.lastRun | date:'short' }})</span>
+        <span *ngIf="!analizadorStatus" class="status-last text-muted">Estado no disponible</span>
+      </div>
+
+      <div class="analyzer-actions">
+        <button *ngIf="isAdmin" class="btn-cta-outline" (click)="runAnalizador()" [disabled]="analizadorCargando" [class.btn-animate]="btnAnimating">
+          {{ analizadorCargando ? 'Ejecutando...' : 'Ejecutar análisis ahora' }}
+        </button>
+      </div>
+
+      <div class="analyzer-latest">
+        <h3>Últimas alertas detectadas</h3>
+        <ul>
+          <li *ngFor="let a of ultimasAlertas">
+            <strong>{{ a.tipo_alerta }}</strong> — {{ a.descripcion }}
+            <small class="text-muted">(Licitación: {{ a.codigo_licitacion || a.licitacion_id }})</small>
+          </li>
+          <li *ngIf="ultimasAlertas.length === 0" class="text-muted">No hay alertas detectadas recientemente.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
   <section class="metrics-container">
     <p *ngIf="errorMensaje" class="error-banner">{{ errorMensaje }}</p>
     <p *ngIf="cargando" class="estado-carga">Cargando métricas...</p>

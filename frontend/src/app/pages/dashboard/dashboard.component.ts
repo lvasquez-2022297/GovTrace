@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DashboardService, DashboardData, DashboardMetrics, IndiceMinisterio } from '../../core/services/dashboard.service';
+import { AnalizadorService } from '../../core/services/analizador.service';
+import { Auth } from '../../core/services/auth.service';
+import { ToastService } from '../../shared/toast.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -27,9 +30,22 @@ export class Dashboard implements OnInit {
   filtroSeleccionado = 'TODOS';
   instituciones: string[] = [];
 
+  // Analizador
+  analizadorCargando = false;
+  analizadorStatus: { isRunning: boolean; lastRun: string | null } | null = null;
+  ultimasAlertas: any[] = [];
+  isAdmin = false;
+  btnAnimating = false;
+
   private datos: DashboardData | null = null;
 
-  constructor(private dashboardService: DashboardService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private dashboardService: DashboardService,
+    private cdr: ChangeDetectorRef,
+    private analizadorService: AnalizadorService,
+    private auth: Auth,
+    private toast: ToastService
+  ) {}
 
   ngOnInit(): void {
     this.dashboardService.getData().subscribe({
@@ -46,6 +62,56 @@ export class Dashboard implements OnInit {
         console.error('Error cargando el dashboard:', err);
         this.errorMensaje = 'No se pudieron cargar las métricas. Intenta de nuevo más tarde.';
         this.cargando = false;
+        this.cdr.detectChanges();
+      }
+    });
+
+    // cargar estado y ultimas alertas del analizador
+    this.loadAnalizadorStatus();
+    this.loadUltimasAlertas(5);
+
+    // determinar si el usuario es ADMIN para mostrar controles
+    this.isAdmin = this.auth.esAdmin();
+    this.auth.currentUser$.subscribe(() => { this.isAdmin = this.auth.esAdmin(); this.cdr.detectChanges(); });
+  }
+
+  private loadAnalizadorStatus(): void {
+    this.analizadorService.status().subscribe({
+      next: (r) => { this.analizadorStatus = r.data; this.cdr.detectChanges(); },
+      error: () => { this.analizadorStatus = null; this.cdr.detectChanges(); }
+    });
+  }
+
+  private loadUltimasAlertas(limit = 5): void {
+    this.analizadorService.ultimas(limit).subscribe({
+      next: (r) => { this.ultimasAlertas = r.data || []; this.cdr.detectChanges(); },
+      error: () => { this.ultimasAlertas = []; this.cdr.detectChanges(); }
+    });
+  }
+
+  runAnalizador(): void {
+    // Animación de botón
+    this.btnAnimating = true;
+    setTimeout(() => (this.btnAnimating = false), 600);
+
+    // Feedback inmediato
+    console.log('Ejecutando analizador (petición enviada)');
+    this.toast.show('Iniciando análisis...', 'info', 2000);
+
+    this.analizadorCargando = true;
+    this.analizadorService.run().subscribe({
+      next: () => {
+        this.analizadorCargando = false;
+        this.loadAnalizadorStatus();
+        this.loadUltimasAlertas(5);
+        this.toast.show('Análisis ejecutado correctamente', 'success');
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error ejecutando analizador:', err);
+        this.analizadorCargando = false;
+        const msg = err?.error?.message || err?.statusText || 'Error ejecutando el análisis';
+        this.toast.show(`Error: ${msg}`, 'error');
         this.cdr.detectChanges();
       }
     });

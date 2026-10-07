@@ -11,3 +11,9 @@ Backend para la plataforma de transparencia en contrataciones públicas GovTrace
 1. Instalar dependencias:
    ```bash
    pnpm install
+```
+
+## Analizador de Riesgo
+
+Se añadió un analizador automático de riesgo que genera alertas basadas en reglas heurísticas.
+Consulta la documentación específica en `README_ANALYZER.md`.

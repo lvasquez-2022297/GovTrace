@@ -4,6 +4,7 @@ import { ProveedoresService } from '../services/ProveedoresService';
 import { LicitacionesService } from '../services/LicitacionesService';
 import { AdjudicacionesService } from '../services/AdjudicacionesService';
 import { AlertasService } from '../services/AlertasService';
+import { analizadorRiesgo } from '../services/AnalizadorRiesgoService';
 import { verificarToken, requiereRol, propioOAdmin, AuthRequest } from '../middlewares/auth';
 import { AppError } from '../utils/AppError';
 
@@ -128,6 +129,22 @@ router.put('/alertas/:id', verificarToken, requiereRol('ADMIN', 'AUDITOR'), ruta
 router.delete('/alertas/:id', ...soloAdmin, ruta(async (req, res) => {
   await alertasService.eliminarAlerta(id(req));
   res.json({ success: true, message: 'Alerta eliminada' });
+}));
+
+// Analizador endpoints
+router.post('/analizador/run', ...soloAdmin, ruta(async (req, res) => {
+  await analizadorRiesgo.ejecutarAnalisisContinuo();
+  res.json({ success: true, message: 'Analizador ejecutado' });
+}));
+
+router.get('/analizador/status', ruta(async (req, res) => {
+  res.json({ success: true, data: { isRunning: analizadorRiesgo.isRunning, lastRun: analizadorRiesgo.lastRun } });
+}));
+
+router.get('/analizador/ultimas-alertas', ruta(async (req, res) => {
+  const limit = Math.max(1, Math.min(100, Number(req.query.limit) || 10));
+  const todas = await alertasService.listarAlertas();
+  res.json({ success: true, data: (todas || []).slice(0, limit) });
 }));
 
 export default router;
