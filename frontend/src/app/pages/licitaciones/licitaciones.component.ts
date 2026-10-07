@@ -111,7 +111,7 @@ export class Licitaciones implements OnInit {
     },
     error: (err) => {
       this.errorMensaje = err.error?.message || 'No tienes permisos para cambiar el estado.';
-      this.cargar(); // Recarga la tabla para restaurar la opción previa si falla
+      this.cargar(); 
       this.cdr.detectChanges();
     }
   });

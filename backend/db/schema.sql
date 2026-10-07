@@ -1,9 +1,9 @@
 drop table if exists alertas cascade;
 drop table if exists adjudicaciones cascade;
 drop table if exists licitaciones cascade;
+drop table if exists entidades cascade;
 drop table if exists proveedores cascade;
 drop table if exists usuarios cascade;
-
 
 create table usuarios (
     id serial primary key,
@@ -24,12 +24,18 @@ create table proveedores (
     creado_en timestamp default current_timestamp
 );
 
+create table entidades (
+    id serial primary key,
+    nombre varchar(150) unique not null,
+    creado_en timestamp default current_timestamp
+);
+
 create table licitaciones (
     id serial primary key,
     codigo_licitacion varchar(50) unique not null,
     titulo varchar(200) not null,
     descripcion text,
-    entidad varchar(150),
+    entidad_id int references entidades(id) on delete set null,
     presupuesto_asignado decimal(12,2) not null check (presupuesto_asignado > 0),
     estado varchar(30) default 'PUBLICADA' check (estado in ('PUBLICADA', 'ADJUDICADA', 'CANCELADA', 'CON_ALERTA')),
     fecha_inicio date not null,
@@ -58,5 +64,6 @@ create table alertas (
 );
 
 create index idx_licitaciones_estado on licitaciones(estado);
+create index idx_licitaciones_entidad on licitaciones(entidad_id);
 create index idx_alertas_riesgo on alertas(nivel_riesgo);
 create index idx_proveedores_nit on proveedores(nit);

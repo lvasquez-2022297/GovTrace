@@ -1,5 +1,6 @@
 import { AlertasRepository, AlertaDatos } from '../data/AlertasRepository';
 import { AppError } from '../utils/AppError';
+import { RolUsuario } from '../models/Usuarios';
 
 const TIPOS = ['SOBRECOSTO', 'PROVEEDOR_INHABILITADO', 'TIEMPO_IRREGULAR', 'DENUNCIA_CIUDADANA'];
 const NIVELES = ['BAJO', 'MEDIO', 'ALTO', 'CRITICO'];
@@ -36,11 +37,24 @@ export class AlertasService {
     return await this.repo.crear(await this.validar(datos));
   }
 
-  async actualizarAlerta(id: number, datos: any) {
-    const a = await this.repo.actualizar(id, await this.validar(datos));
-    if (!a) throw new AppError(`Alerta con ID ${id} no encontrada.`, 404);
-    return a;
+  async actualizarAlerta(id: number, datos: any, rol: RolUsuario = 'ADMIN') {
+  let entrada = datos;
+
+  if (rol === 'AUDITOR') {
+    const actual = await this.repo.obtenerPorId(id);
+    if (!actual) throw new AppError(`Alerta con ID ${id} no encontrada.`, 404);
+    entrada = {
+      licitacion_id: actual.licitacion_id,
+      tipo_alerta: actual.tipo_alerta,
+      nivel_riesgo: datos?.nivel_riesgo ?? actual.nivel_riesgo,
+      descripcion: datos?.descripcion ?? actual.descripcion
+    };
   }
+
+  const a = await this.repo.actualizar(id, await this.validar(entrada));
+  if (!a) throw new AppError(`Alerta con ID ${id} no encontrada.`, 404);
+  return a;
+}
 
   async eliminarAlerta(id: number): Promise<boolean> {
     if (!(await this.repo.eliminar(id))) throw new AppError(`Alerta con ID ${id} no encontrada.`, 404);

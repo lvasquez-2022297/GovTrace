@@ -10,9 +10,10 @@ export interface AlertaDatos {
 const BASE = `
   SELECT al.id, al.licitacion_id, al.tipo_alerta, al.descripcion,
          al.nivel_riesgo, al.creado_en,
-         l.codigo_licitacion, l.titulo, l.entidad
+         l.codigo_licitacion, l.titulo, e.nombre AS entidad
   FROM alertas al
-  JOIN licitaciones l ON l.id = al.licitacion_id`;
+  JOIN licitaciones l ON l.id = al.licitacion_id
+  LEFT JOIN entidades e ON e.id = l.entidad_id`;
 
 export class AlertasRepository {
   async obtenerTodas() {

@@ -121,8 +121,9 @@ router.get('/alertas', ruta(async (req, res) => {
 router.post('/alertas', ...soloAdmin, ruta(async (req, res) => {
   res.status(201).json({ success: true, data: await alertasService.registrarAlerta(req.body) });
 }));
-router.put('/alertas/:id', ...soloAdmin, ruta(async (req, res) => {
-  res.json({ success: true, data: await alertasService.actualizarAlerta(id(req), req.body) });
+router.put('/alertas/:id', verificarToken, requiereRol('ADMIN', 'AUDITOR'), ruta(async (req, res) => {
+  const rol = (req as AuthRequest).usuario!.rol;
+  res.json({ success: true, data: await alertasService.actualizarAlerta(id(req), req.body, rol) });
 }));
 router.delete('/alertas/:id', ...soloAdmin, ruta(async (req, res) => {
   await alertasService.eliminarAlerta(id(req));

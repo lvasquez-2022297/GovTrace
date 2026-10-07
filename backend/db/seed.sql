@@ -22,17 +22,23 @@ insert into proveedores (nit, razon_social, email, calificacion) values
 ('2581473-9', 'Infraestructura Cívica S.A.', 'proyectos@infracivica.com', 3.90),
 ('9517532-8', 'Servicios de Logística e Impreza', 'logistica@impreza.com', 4.70);
 
-insert into licitaciones (codigo_licitacion, titulo, descripcion, entidad, presupuesto_asignado, estado, fecha_inicio, fecha_cierre, creado_por) values
-('LIC-2026-001', 'Adquisición de Equipos de Cómputo para Escuelas', 'Compra de 500 computadoras portátiles para escuelas públicas.', 'Ministerio de Educación', 150000.00, 'ADJUDICADA', '2026-09-01', '2026-09-15', 1),
-('LIC-2026-002', 'Compra de Lote de Mascarillas y Equipo Médico', 'Insumos de protección para la red nacional de hospitales.', 'Ministerio de Salud Pública', 850000.00, 'CON_ALERTA', '2026-09-10', '2026-09-25', 4),
-('LIC-2026-003', 'Reparación de Puente Vehicular Km 45', 'Mantenimiento estructural y pavimentación de tramo.', 'Ministerio de Comunicaciones', 2500000.00, 'ADJUDICADA', '2026-08-18', '2026-09-10', 7),
-('LIC-2026-004', 'Instalación de Fibra Óptica en Ministerios', 'Cableado estructurado y conectividad de alta velocidad.', 'Ministerio de Finanzas', 420000.00, 'ADJUDICADA', '2026-08-01', '2026-08-20', 1),
-('LIC-2026-005', 'Suministro de Libros de Texto para Primaria', 'Impresión y distribución de 50,000 textos escolares.', 'Ministerio de Educación', 600000.00, 'ADJUDICADA', '2026-07-15', '2026-08-05', 10),
-('LIC-2026-006', 'Mantenimiento de Ambulancias de la Red Sur', 'Reparación mecánica y equipamiento de emergencia.', 'Ministerio de Salud Pública', 310000.00, 'CON_ALERTA', '2026-09-05', '2026-09-20', 4),
-('LIC-2026-007', 'Construcción de Paso a Desnivel Zona Central', 'Obra civil de infraestructura vial.', 'Ministerio de Comunicaciones', 8900000.00, 'PUBLICADA', '2026-09-15', '2026-10-30', 7),
-('LIC-2026-008', 'Servicio de Licenciamiento de Software Cloud', 'Renovación de licencias para servidores gubernamentales.', 'Ministerio de Finanzas', 280000.00, 'ADJUDICADA', '2026-08-10', '2026-08-28', 1),
-('LIC-2026-009', 'Adquisición de Insumos Quirúrgicos', 'Material estéril para salas de operaciones.', 'Ministerio de Salud Pública', 1200000.00, 'CON_ALERTA', '2026-09-12', '2026-09-28', 4),
-('LIC-2026-010', 'Remozamiento de Aulas Escolares en Sector Rural', 'Pintura, techo y electricidad en 20 centros educativos.', 'Ministerio de Educación', 550000.00, 'CANCELADA', '2026-07-01', '2026-07-20', 10);
+insert into entidades (nombre) values
+('Ministerio de Educación'),
+('Ministerio de Salud Pública'),
+('Ministerio de Comunicaciones'),
+('Ministerio de Finanzas');
+
+insert into licitaciones (codigo_licitacion, titulo, descripcion, entidad_id, presupuesto_asignado, estado, fecha_inicio, fecha_cierre, creado_por) values
+('LIC-2026-001', 'Adquisición de Equipos de Cómputo para Escuelas', 'Compra de 500 computadoras portátiles para escuelas públicas.', 1, 150000.00, 'ADJUDICADA', '2026-09-01', '2026-09-15', 1),
+('LIC-2026-002', 'Compra de Lote de Mascarillas y Equipo Médico', 'Insumos de protección para la red nacional de hospitales.', 2, 850000.00, 'CON_ALERTA', '2026-09-10', '2026-09-25', 4),
+('LIC-2026-003', 'Reparación de Puente Vehicular Km 45', 'Mantenimiento estructural y pavimentación de tramo.', 3, 2500000.00, 'ADJUDICADA', '2026-08-18', '2026-09-10', 7),
+('LIC-2026-004', 'Instalación de Fibra Óptica en Ministerios', 'Cableado estructurado y conectividad de alta velocidad.', 4, 420000.00, 'ADJUDICADA', '2026-08-01', '2026-08-20', 1),
+('LIC-2026-005', 'Suministro de Libros de Texto para Primaria', 'Impresión y distribución de 50,000 textos escolares.', 1, 600000.00, 'ADJUDICADA', '2026-07-15', '2026-08-05', 10),
+('LIC-2026-006', 'Mantenimiento de Ambulancias de la Red Sur', 'Reparación mecánica y equipamiento de emergencia.', 2, 310000.00, 'CON_ALERTA', '2026-09-05', '2026-09-20', 4),
+('LIC-2026-007', 'Construcción de Paso a Desnivel Zona Central', 'Obra civil de infraestructura vial.', 3, 8900000.00, 'ADJUDICADA', '2026-09-15', '2026-10-30', 7),
+('LIC-2026-008', 'Servicio de Licenciamiento de Software Cloud', 'Renovación de licencias para servidores gubernamentales.', 4, 280000.00, 'ADJUDICADA', '2026-08-10', '2026-08-28', 1),
+('LIC-2026-009', 'Adquisición de Insumos Quirúrgicos', 'Material estéril para salas de operaciones.', 2, 1200000.00, 'CON_ALERTA', '2026-09-12', '2026-09-28', 4),
+('LIC-2026-010', 'Remozamiento de Aulas Escolares en Sector Rural', 'Pintura, techo y electricidad en 20 centros educativos.', 1, 550000.00, 'PUBLICADA', '2026-07-01', '2026-07-20', 10);
 
 insert into adjudicaciones (licitacion_id, proveedor_id, monto_adjudicado, observaciones) values
 (1, 1, 145000.00, 'Asignado a TechGuate S.A. por menor costo y garantía extendida de 3 años.'),
@@ -43,7 +49,6 @@ insert into adjudicaciones (licitacion_id, proveedor_id, monto_adjudicado, obser
 (2, 3, 840000.00, 'Adjudicado bajo contingencia pero sujeto a auditoría por alerta detectada.'),
 (6, 10, 295000.00, 'Adjudicación parcial para revisión de flota de unidades.'),
 (9, 6, 1180000.00, 'Asignado temporalmente a falta de más competidores capacitados.'),
-(10, 9, 540000.00, 'Proceso revertido y cancelado previo a la firma final del contrato.'),
 (7, 5, 8750000.00, 'Propuesta económica pre-calificada en revisión técnica.');
 
 insert into alertas (licitacion_id, tipo_alerta, descripcion, nivel_riesgo) values

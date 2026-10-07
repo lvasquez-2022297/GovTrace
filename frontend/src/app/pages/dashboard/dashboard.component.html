@@ -4,42 +4,25 @@
       <span class="badge-active">Vigilancia Fiscal Activa</span>
       <h1 class="hero-title">Portal de Transparencia y Auditoría Ciudadana</h1>
       <p class="hero-description">
-        Rastreamos las compras del Estado guatemalteco para identificar desvíos, sobreprecios y anomalías. 
+        Rastreamos las compras del Estado guatemalteco para identificar desvíos, sobreprecios y anomalías.
         Empoderando a la ciudadanía a través del acceso a datos abiertos y estructurados.
       </p>
 
       <div class="filter-section">
         <span class="filter-label">FILTRAR LICITACIONES POR:</span>
         <div class="filter-pills">
-          <button 
-            class="pill-btn" 
-            [class.active]="filtroSeleccionado === 'Todos'" 
-            (click)="setFiltro('Todos')">
+          <button class="pill-btn" [class.active]="filtroSeleccionado === 'TODOS'" (click)="setFiltro('TODOS')">
             Todos
           </button>
-          <button 
-            class="pill-btn btn-alert" 
-            [class.active]="filtroSeleccionado === 'Alerta'" 
-            (click)="setFiltro('Alerta')">
-            🔴 Con Alerta de Sobreprecio
+          <button class="pill-btn btn-alert" [class.active]="filtroSeleccionado === 'ALERTA'" (click)="setFiltro('ALERTA')">
+            🔴 Con alertas
           </button>
-          <button 
-            class="pill-btn" 
-            [class.active]="filtroSeleccionado === 'Salud'" 
-            (click)="setFiltro('Salud')">
-            Ministerio de Salud
-          </button>
-          <button 
-            class="pill-btn" 
-            [class.active]="filtroSeleccionado === 'Educacion'" 
-            (click)="setFiltro('Educacion')">
-            Ministerio de Educación
-          </button>
-          <button 
-            class="pill-btn" 
-            [class.active]="filtroSeleccionado === 'Obras'" 
-            (click)="setFiltro('Obras')">
-            Obras Públicas
+          <button
+            *ngFor="let inst of instituciones"
+            class="pill-btn"
+            [class.active]="filtroSeleccionado === inst"
+            (click)="setFiltro(inst)">
+            {{ inst }}
           </button>
         </div>
       </div>
@@ -48,46 +31,51 @@
 
   <section class="metrics-container">
     <p *ngIf="errorMensaje" class="error-banner">{{ errorMensaje }}</p>
+    <p *ngIf="cargando" class="estado-carga">Cargando métricas...</p>
+    <p class="text-muted" *ngIf="filtroSeleccionado !== 'TODOS'">
+      Mostrando: {{ filtroSeleccionado === 'ALERTA' ? 'licitaciones con alertas' : filtroSeleccionado }}
+    </p>
+
     <div class="metrics-grid">
       <div class="metric-card">
         <span class="metric-label">Total Presupuestado</span>
         <h2 class="metric-value">Q{{ metrics.totalPresupuesto / 1000000 | number:'1.1-1' }}M</h2>
-        <span class="metric-subtext subtext-green">⬆ 98.4% Ejecutado Correctamente</span>
+        <span class="metric-subtext subtext-green">{{ extra.adjudicadas }} licitaciones adjudicadas</span>
       </div>
 
       <div class="metric-card">
         <span class="metric-label">Alertas Activas</span>
         <h2 class="metric-value">{{ metrics.alertasActivas }}</h2>
-        <span class="metric-subtext subtext-red">⏱ +12% de sobreprecio promedio</span>
+        <span class="metric-subtext subtext-red">{{ extra.alertasCriticas }} de riesgo alto o crítico</span>
       </div>
 
       <div class="metric-card">
         <span class="metric-label">Ministerios Auditados</span>
         <h2 class="metric-value">{{ metrics.ministeriosAuditados }}</h2>
-        <span class="metric-subtext subtext-green">⬆ Cobertura completa del gabinete</span>
+        <span class="metric-subtext subtext-green">{{ extra.licitaciones }} licitaciones en total</span>
       </div>
 
       <div class="metric-card">
         <span class="metric-label">Proveedores Registrados</span>
         <h2 class="metric-value">{{ metrics.proveedoresRegistrados | number }}</h2>
-        <span class="metric-subtext subtext-green">⬆ 95% con documentación al día</span>
+        <span class="metric-subtext subtext-green">Directorio de contratistas</span>
       </div>
     </div>
   </section>
 
   <section class="cta-banner">
     <h2>¿Has Detectado una Anomalía o un Sobreprecio?</h2>
-    <p>Nuestra herramienta permite subir reportes de manera anónima y segura. Cada denuncia es procesada por un equipo de analistas de datos y validada frente a la base nacional.</p>
+    <p>Consulta las alertas registradas y revisa cada licitación y su proveedor adjudicado.</p>
     <div class="cta-buttons">
-      <a routerLink="/alertas" class="btn-cta-green">Iniciar Denuncia Anónima ➔</a>
-      <a routerLink="/licitaciones" class="btn-cta-outline">Guía del Auditor Ciudadano ❓</a>
+      <a routerLink="/alertas" class="btn-cta-green">Ver alertas ➔</a>
+      <a routerLink="/licitaciones" class="btn-cta-outline">Ver licitaciones</a>
     </div>
   </section>
 
   <section class="transparency-index-section">
     <div class="section-header">
       <h2>Índice de Transparencia por Ministerio</h2>
-      <p>Evaluamos y ordenamos cada institución estatal según su nivel de apertura de datos y porcentaje de alertas fiscales resueltas.</p>
+      <p>Cada institución se ordena según el porcentaje de sus licitaciones que no tienen alertas registradas.</p>
     </div>
 
     <div class="table-card">
@@ -108,6 +96,9 @@
               {{ m.indiceTransparencia }}%
             </td>
             <td class="text-right text-muted">{{ m.tasaAlerta }}%</td>
+          </tr>
+          <tr *ngIf="ministeriosIndex.length === 0 && !cargando">
+            <td colspan="4" class="text-muted">No hay instituciones registradas.</td>
           </tr>
         </tbody>
       </table>

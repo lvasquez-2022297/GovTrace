@@ -73,4 +73,10 @@ export class Auth {
     const usuario = this.getUsuarioActual();
     return usuario?.rol === 'ADMIN';
   }
+
+  puedeRevisar(): boolean {
+  const rol = this.getUsuarioActual()?.rol;
+  return rol === 'ADMIN' || rol === 'AUDITOR';
+  }
+
 }

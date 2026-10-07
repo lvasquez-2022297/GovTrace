@@ -11,12 +11,13 @@ const BASE = `
   SELECT a.id, a.licitacion_id, a.proveedor_id,
          a.monto_adjudicado::float8 AS monto_adjudicado,
          a.fecha_adjudicacion, a.observaciones,
-         l.codigo_licitacion, l.titulo, l.entidad,
+         l.codigo_licitacion, l.titulo, e.nombre AS entidad,
          l.estado AS estado_licitacion,
          l.presupuesto_asignado::float8 AS presupuesto_asignado,
          p.razon_social, p.nit
   FROM adjudicaciones a
   JOIN licitaciones l ON l.id = a.licitacion_id
+  LEFT JOIN entidades e ON e.id = l.entidad_id
   JOIN proveedores p ON p.id = a.proveedor_id`;
 
 export class AdjudicacionesRepository {

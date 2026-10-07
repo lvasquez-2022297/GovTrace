@@ -11,10 +11,20 @@ export interface DashboardMetrics {
   proveedoresRegistrados: number;
 }
 
-interface ApiList<T> {
-  success: boolean;
-  data: T[];
+export interface IndiceMinisterio {
+  ranking: number;
+  institucion: string;
+  indiceTransparencia: number;
+  tasaAlerta: number;
 }
+
+export interface DashboardData {
+  licitaciones: any[];
+  alertas: any[];
+  totalProveedores: number;
+}
+
+interface ApiList<T> { success: boolean; data: T[]; }
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
@@ -22,21 +32,16 @@ export class DashboardService {
 
   constructor(private http: HttpClient) {}
 
-  getMetrics(): Observable<DashboardMetrics> {
+  getData(): Observable<DashboardData> {
     return forkJoin({
       licitaciones: this.http.get<ApiList<any>>(`${this.api}/licitaciones`),
       alertas: this.http.get<ApiList<any>>(`${this.api}/alertas`),
       proveedores: this.http.get<ApiList<any>>(`${this.api}/proveedores`)
     }).pipe(
       map(({ licitaciones, alertas, proveedores }) => ({
-        totalPresupuesto: licitaciones.data.reduce(
-          (suma, l) => suma + Number(l.presupuesto_asignado || 0), 0
-        ),
-        alertasActivas: alertas.data.length,
-        ministeriosAuditados: new Set(
-          licitaciones.data.map((l) => l.entidad).filter(Boolean)
-        ).size,
-        proveedoresRegistrados: proveedores.data.length
+        licitaciones: licitaciones.data,
+        alertas: alertas.data,
+        totalProveedores: proveedores.data.length
       }))
     );
   }
