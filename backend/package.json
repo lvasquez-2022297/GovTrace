@@ -5,8 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx --env-file=.env src/index.ts",
-    "server:watch": "tsx watch --env-file=.env src/index.ts",
-    
+    "server:watch": "tsx watch --env-file=.env src/index.ts"
   },
   "keywords": [],
   "author": "",
